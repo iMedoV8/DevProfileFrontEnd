@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Github, Mail, Chrome } from "lucide-react"
+import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { useRouter } from "next/navigation"
 
 interface AuthModalProps {
   open: boolean
@@ -16,6 +18,15 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
+  const login = useDevProfileStore((state) => state.login)
+  const router = useRouter()
+
+  const handleMockLogin = () => {
+    login("Demo User", "demo@devprofile.ai")
+    onOpenChange(false)
+    router.push("/dashboard")
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -31,6 +42,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           <Button
             variant="outline"
             className="h-12 justify-center gap-3 text-sm font-medium"
+            onClick={handleMockLogin}
           >
             <Chrome className="size-5" />
             Continue with Google
@@ -38,6 +50,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           <Button
             variant="outline"
             className="h-12 justify-center gap-3 text-sm font-medium"
+            onClick={handleMockLogin}
           >
             <Github className="size-5" />
             Continue with GitHub
@@ -45,6 +58,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           <Button
             variant="outline"
             className="h-12 justify-center gap-3 text-sm font-medium"
+            onClick={handleMockLogin}
           >
             <Mail className="size-5" />
             Continue with Email

@@ -1,0 +1,137 @@
+"use client"
+
+import { useState } from "react"
+import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { Button } from "@/components/ui/button"
+import { Github, Star, GitCommit, CheckCircle2, Loader2, GitPullRequest } from "lucide-react"
+
+export default function GithubConnectionPage() {
+    const { github, connectGithub } = useDevProfileStore()
+    const [isConnecting, setIsConnecting] = useState(false)
+
+    const handleConnect = async () => {
+        setIsConnecting(true)
+        await connectGithub("johndoe_dev") // Mocking an auth flow callback username
+        setIsConnecting(false)
+    }
+
+    // --- EMPTY STATE ---
+    if (!github.isConnected) {
+        return (
+            <div className="flex flex-col gap-6 max-w-2xl mx-auto mt-10">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Connect GitHub</h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Allow DevProfile to analyze your code quality, commit consistency, and the technologies you use.
+                    </p>
+                </div>
+
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20 text-center bg-card shadow-sm">
+                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-secondary/50 text-foreground">
+                        <Github className="size-8" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold tracking-tight">Connect your GitHub to start evaluation</h3>
+                    <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                        We will scan your public repositories to generate a comprehensive hireability score. We never store your source code.
+                    </p>
+                    <Button
+                        onClick={handleConnect}
+                        disabled={isConnecting}
+                        className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm transition-all active:scale-95"
+                    >
+                        {isConnecting ? (
+                            <>
+                                <Loader2 className="size-4 animate-spin" />
+                                Connecting...
+                            </>
+                        ) : (
+                            <>
+                                <Github className="size-4.5" />
+                                Connect with GitHub
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+    // --- POPULATED STATE ---
+    return (
+        <div className="flex flex-col gap-8">
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">GitHub Analysis</h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Successfully connected as <span className="font-semibold text-foreground">@{github.username}</span>.
+                    </p>
+                </div>
+                <div className="flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-600 dark:text-green-400 border border-green-500/20">
+                    <CheckCircle2 className="size-4" />
+                    Connected & Synced
+                </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+                {/* Top Languages */}
+                <div className="col-span-1 flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold tracking-tight text-muted-foreground uppercase">Top Languages</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {github.languages.map((lang) => (
+                            <span key={lang} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground border border-border">
+                                {lang}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Mock Activity Stats */}
+                <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <GitCommit className="size-4" />
+                            <span className="text-sm font-medium">Contributions (Year)</span>
+                        </div>
+                        <span className="text-3xl font-bold tracking-tight text-foreground">1,248</span>
+                    </div>
+                    <div className="flex flex-col gap-1 border-l border-border pl-4">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <GitPullRequest className="size-4" />
+                            <span className="text-sm font-medium">Pull Requests</span>
+                        </div>
+                        <span className="text-3xl font-bold tracking-tight text-foreground">42</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-semibold tracking-tight">Analyzed Repositories</h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                    {github.repositories.map((repo) => (
+                        <div key={repo.id} className="flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-border/80">
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-primary">{repo.name}</h4>
+                                    <div className="flex items-center gap-1 text-muted-foreground text-xs font-medium">
+                                        <Star className="size-3.5 fill-muted-foreground" />
+                                        {repo.stars}
+                                    </div>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{repo.description}</p>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="size-2.5 rounded-full bg-primary/70" />
+                                    <span className="text-xs font-medium text-muted-foreground">{repo.language}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                    Updated {new Date(repo.updatedAt).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}
