@@ -63,7 +63,6 @@ const navLinks = [
 
 const dashboardLinks = [
   { label: "Workspace", href: "/dashboard" },
-  { label: "Landing Page", href: "/" },
   { label: "Blog", href: "/blog" },
 ]
 
@@ -414,14 +413,6 @@ export function Navbar() {
                 >
                   <SettingsIcon className="size-4" />
                   Settings
-                </Link>
-
-                <Link
-                  href="/"
-                  className="flex items-center gap-2 block rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <Map className="size-4" />
-                  Landing Page
                 </Link>
 
                 <Link

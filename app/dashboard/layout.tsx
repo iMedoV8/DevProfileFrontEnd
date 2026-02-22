@@ -38,6 +38,8 @@ function isRouteAllowed(pathname: string, workflowStep: WorkflowStep): boolean {
 }
 
 import { Navbar } from "@/components/navbar"
+import { DashboardThemeProvider } from "@/components/providers/dashboard-theme-provider"
+import { cn } from "@/lib/utils"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
@@ -82,24 +84,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }, [user.isAuthenticated, workflowStep, pathname, router, isMounted])
 
-    // Prevent layout shift during mount
-    if (!isMounted) return null
-
-    // If technically unauthenticated but effect hasn't routed purely yet, render nothing wrapper
-    // to prevent dashboard flashing briefly before redirect inside Next.js layout engine.
-    if (!user.isAuthenticated) return null
+    // Mount the DashboardThemeProvider wrapper synchronously to inject the pre-hydration FOUC script.
+    // We conditionally fade the inner structure using opacity-0 to avert layout shifts and auth-flashing.
+    const isReady = isMounted && user.isAuthenticated
 
     return (
-        <div className="min-h-screen bg-background">
-            <Navbar />
-            <div className="flex pt-[72px]">
-                <Sidebar />
-                <main className="flex-1 overflow-x-hidden p-6 md:p-10">
-                    <div className="mx-auto max-w-5xl">
-                        {children}
-                    </div>
-                </main>
+        <DashboardThemeProvider>
+            <div className={cn("min-h-screen bg-background transition-opacity duration-500", isReady ? "opacity-100" : "opacity-0 invisible")}>
+                {isReady && (
+                    <>
+                        <Navbar />
+                        <div className="flex pt-[72px]">
+                            <Sidebar />
+                            <main className="flex-1 overflow-x-hidden p-6 md:p-10">
+                                <div className="mx-auto max-w-5xl">
+                                    {children}
+                                </div>
+                            </main>
+                        </div>
+                    </>
+                )}
             </div>
-        </div>
+        </DashboardThemeProvider>
     )
 }

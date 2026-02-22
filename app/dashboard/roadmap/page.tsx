@@ -2,7 +2,7 @@
 
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { Button } from "@/components/ui/button"
-import { Map, ArrowRight, Target, Lightbulb, Code2 } from "lucide-react"
+import { Map, ArrowRight, Target, Lightbulb, Code2, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 
 export default function RoadmapPage() {

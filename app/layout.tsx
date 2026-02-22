@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { ThemeProvider } from "@/components/theme-provider"
 import NextTopLoader from "nextjs-toploader"
 import { Toaster } from "@/components/ui/toaster"
+import { MarketingThemeGuard } from "@/components/providers/marketing-theme-guard"
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,20 +47,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <NextTopLoader
-            color="hsl(var(--primary))"
-            showSpinner={false}
-            height={3}
-          />
+        <NextTopLoader
+          color="hsl(var(--primary))"
+          showSpinner={false}
+          height={3}
+        />
+        <MarketingThemeGuard>
           {children}
-          <Toaster />
-        </ThemeProvider>
+        </MarketingThemeGuard>
+        <Toaster />
         <Analytics />
       </body>
     </html>
