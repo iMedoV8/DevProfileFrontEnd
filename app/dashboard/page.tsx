@@ -1,15 +1,16 @@
 "use client"
 
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { formatDistanceToNow } from "date-fns"
 import { OnboardingChecklist } from "@/components/dashboard/features/onboarding-checklist"
 import { ProfileCard } from "@/components/dashboard/widgets/profile-card"
 import { ScoreWidget } from "@/components/dashboard/widgets/score-widget"
 import { Button } from "@/components/ui/button"
-import { Github, FileText, Activity } from "lucide-react"
+import { Github, FileText, Activity, Target } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardOverviewPage() {
-    const { user } = useDevProfileStore()
+    const { user, workflowStep, analysis } = useDevProfileStore()
 
     // For greeting randomly based on time of day
     const hour = new Date().getHours()
@@ -17,14 +18,40 @@ export default function DashboardOverviewPage() {
 
     return (
         <div className="flex flex-col gap-8 pb-10">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                    {greeting}, {user.name ? user.name.split(" ")[0] : "Developer"}!
-                </h1>
-                <p className="text-muted-foreground">
-                    Welcome to your DevProfile workspace. Start your evaluation below.
-                </p>
+            <div className="flex flex-col gap-2 relative">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                            {greeting}, {user.name ? user.name.split(" ")[0] : "Developer"}!
+                        </h1>
+                        <p className="text-muted-foreground mt-2">
+                            Welcome to your DevProfile workspace. Start your evaluation below.
+                        </p>
+                    </div>
+                    {analysis.lastAnalyzedAt && (
+                        <div className="flex items-center gap-2 rounded-full bg-secondary/50 px-3 py-1.5 text-xs font-semibold text-muted-foreground border border-border">
+                            <Activity className="size-3.5" />
+                            Last analyzed {formatDistanceToNow(analysis.lastAnalyzedAt, { addSuffix: true })}
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {user.isAuthenticated && workflowStep === "START" && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+                    <div className="flex items-start gap-4">
+                        <div className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+                            <Target className="size-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold tracking-tight text-foreground">Welcome to DevProfile!</h3>
+                            <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+                                We're excited to help you optimize your developer identity. Follow the onboarding checklist below to begin your first evaluation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <OnboardingChecklist />
 

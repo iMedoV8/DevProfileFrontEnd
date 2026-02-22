@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Activity, Play, CheckCircle2, ArrowRight, Server, FileCode2, Cpu, FileSpreadsheet } from "lucide-react"
@@ -19,6 +20,7 @@ const MESSAGES = [
 
 export default function AnalysisPage() {
     const { analysis, startAnalysis, completeAnalysis } = useDevProfileStore()
+    const { toast } = useToast()
     const [progress, setProgress] = useState(0)
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
 
@@ -43,14 +45,19 @@ export default function AnalysisPage() {
                     requestAnimationFrame(animateProgress)
                 } else if (newProgress >= 100 && analysis.status === "processing") {
                     // Once 100% is hit locally, fire the store action to complete the analysis via API
-                    completeAnalysis()
+                    completeAnalysis().catch((err) => {
+                        toast({
+                            variant: "destructive",
+                            title: "Analysis Failed",
+                            description: err.message || "An error occurred during evaluation.",
+                        })
+                    })
                 }
             }
 
             requestAnimationFrame(animateProgress)
         }
-    }, [analysis.status, analysis.analysisStartedAt, analysis.analysisDuration, completeAnalysis])
-
+    }, [analysis.status, analysis.analysisStartedAt, analysis.analysisDuration, completeAnalysis, toast])
 
     // --- EMPTY / IDLE STATE ---
     if (analysis.status === "idle") {

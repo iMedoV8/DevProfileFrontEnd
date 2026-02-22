@@ -14,6 +14,11 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 export const connectGithubService = async (username: string): Promise<GithubData> => {
     await delay(1500) // Simulating OAuth and data fetching latency
 
+    // 20% chance to simulate a rate limit error
+    if (Math.random() < 0.2) {
+        throw new Error("GitHub API rate limit exceeded. Please try again later.")
+    }
+
     return {
         isConnected: true,
         username,
@@ -58,6 +63,11 @@ export const connectGithubService = async (username: string): Promise<GithubData
 export const uploadResumeService = async (file: File): Promise<ResumeData> => {
     await delay(2000) // Simulating file upload and PDF parsing
 
+    // 20% chance to simulate a parsing error
+    if (Math.random() < 0.2) {
+        throw new Error("Failed to parse PDF structure. The file might be corrupted or in an unsupported format.")
+    }
+
     return {
         uploaded: true,
         filename: file.name,
@@ -75,6 +85,11 @@ export const runAnalysisService = async (): Promise<Partial<AnalysisResult>> => 
     // We simulate a shorter delay here because the store will manage the long running 15-second simulation via UI states.
     // This service function represents the final payload resolution.
     await delay(1000)
+
+    // 20% chance to simulate an LLM generation timeout or processing crash
+    if (Math.random() < 0.2) {
+        throw new Error("Analysis engine timed out while evaluating repository patterns. Please retry.")
+    }
 
     const scoreBreakdown: ScoreBreakdown = {
         code: 85,

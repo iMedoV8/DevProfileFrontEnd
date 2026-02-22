@@ -101,6 +101,7 @@ export const useDevProfileStore = create<DevProfileState>()(
                     }))
                 } catch (error) {
                     console.error("Failed to connect GitHub", error)
+                    throw error // Bubble up to UI Toasters
                 }
             },
 
@@ -116,6 +117,7 @@ export const useDevProfileStore = create<DevProfileState>()(
                     }))
                 } catch (error) {
                     console.error("Failed to upload resume", error)
+                    throw error // Bubble up to UI Toasters
                 }
             },
 
@@ -144,6 +146,7 @@ export const useDevProfileStore = create<DevProfileState>()(
                         analysis: {
                             ...state.analysis,
                             ...analysisData,
+                            lastAnalyzedAt: Date.now(), // Persist timestamp for standard UI components
                         },
                         roadmap: roadmapData,
                         workflowStep: "REPORT_AVAILABLE",
@@ -157,6 +160,7 @@ export const useDevProfileStore = create<DevProfileState>()(
                             analysisStartedAt: null,
                         },
                     }))
+                    throw error // Bubble up to UI Toasters
                 }
             },
 

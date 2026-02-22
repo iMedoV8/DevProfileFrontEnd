@@ -61,6 +61,7 @@ export interface AnalysisResult {
     weaknesses: string[]
     recommendations: string[]
     detectedTechStack: string[]
+    lastAnalyzedAt?: number // Added for localized relative timestamps
 }
 
 export interface RoadmapWeek {

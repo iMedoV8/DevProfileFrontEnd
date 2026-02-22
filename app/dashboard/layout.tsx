@@ -37,6 +37,8 @@ function isRouteAllowed(pathname: string, workflowStep: WorkflowStep): boolean {
     return true
 }
 
+import { Navbar } from "@/components/navbar"
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const pathname = usePathname()
@@ -52,6 +54,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useEffect(() => {
         // Only run auth and workflow checks after the client has safely mounted the persisted store
         if (!isMounted) return
+
+        // Force viewport reset on route change
+        window.scrollTo({ top: 0, behavior: "auto" });
 
         // Auth Guard
         if (!user.isAuthenticated) {
@@ -85,13 +90,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!user.isAuthenticated) return null
 
     return (
-        <div className="flex min-h-screen w-full bg-background mt-[72px]">
-            <Sidebar />
-            <main className="flex-1 overflow-x-hidden p-6 md:p-8">
-                <div className="mx-auto max-w-5xl">
-                    {children}
-                </div>
-            </main>
+        <div className="min-h-screen bg-background">
+            <Navbar />
+            <div className="flex pt-[72px]">
+                <Sidebar />
+                <main className="flex-1 overflow-x-hidden p-6 md:p-10">
+                    <div className="mx-auto max-w-5xl">
+                        {children}
+                    </div>
+                </main>
+            </div>
         </div>
     )
 }

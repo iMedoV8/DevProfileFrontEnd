@@ -1,6 +1,7 @@
 "use client"
 
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { PieChart, Download, ArrowRight, ShieldCheck, ThumbsUp, ThumbsDown, Activity, Code, GitMerge, FileText, Zap } from "lucide-react"
 import Link from "next/link"
@@ -39,15 +40,18 @@ export default function ReportPage() {
     }
 
     // --- POPULATED STATE ---
-    const { score, scoreBreakdown, strengths, weaknesses, recommendations, detectedTechStack } = analysis
+    const { score, scoreBreakdown, strengths, weaknesses, recommendations, detectedTechStack, lastAnalyzedAt } = analysis
 
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Developer Report</h1>
-                    <p className="mt-2 text-muted-foreground">
-                        Confidential hireability evaluation based on your public profiles.
+                    <p className="mt-2 text-muted-foreground flex flex-col gap-1">
+                        <span>Confidential hireability evaluation based on your public profiles.</span>
+                        {lastAnalyzedAt && (
+                            <span className="text-xs font-medium text-foreground/50">Last updated {formatDistanceToNow(lastAnalyzedAt, { addSuffix: true })}</span>
+                        )}
                     </p>
                 </div>
                 <Button onClick={() => alert("Downloading PDF... (Mock)")} className="flex items-center gap-2 rounded-xl bg-accent text-foreground hover:bg-accent/80 transition-colors shadow-sm">

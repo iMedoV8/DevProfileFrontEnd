@@ -151,6 +151,12 @@ export function Sidebar() {
                         )
                     })}
                 </nav>
+
+                <div className="mt-auto px-4 pb-4 pt-8">
+                    <p className="rounded-xl border border-border/50 bg-accent/30 p-3 text-center text-xs text-muted-foreground leading-relaxed">
+                        Your progress is saved locally in this browser.
+                    </p>
+                </div>
             </div>
         </aside>
     )

@@ -2,13 +2,16 @@
 
 import { useState, useRef } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { FileText, UploadCloud, CheckCircle2, Loader2, AlertTriangle, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export default function ResumeUploadPage() {
     const { resume, uploadResume } = useDevProfileStore()
+    const { toast } = useToast()
     const [isUploading, setIsUploading] = useState(false)
+    const [errorMsg, setErrorMsg] = useState<string | null>(null)
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -41,13 +44,33 @@ export default function ResumeUploadPage() {
     const processFile = async (file: File) => {
         // Front-end validation
         if (file.type !== "application/pdf") {
-            alert("Only PDF files are currently supported for accuracy.")
+            toast({
+                variant: "destructive",
+                title: "Invalid File Type",
+                description: "Only PDF files are currently supported for accuracy.",
+            })
             return
         }
 
         setIsUploading(true)
-        await uploadResume(file)
-        setIsUploading(false)
+        setErrorMsg(null)
+        try {
+            await uploadResume(file)
+            toast({
+                title: "Resume Uploaded",
+                description: "Your structural markers have been successfully extracted.",
+            })
+        } catch (error: any) {
+            const message = error.message || "An unexpected error occurred."
+            setErrorMsg(message)
+            toast({
+                variant: "destructive",
+                title: "Upload Failed",
+                description: message,
+            })
+        } finally {
+            setIsUploading(false)
+        }
     }
 
     // --- EMPTY STATE ---
@@ -81,15 +104,29 @@ export default function ResumeUploadPage() {
                         className="absolute inset-0 z-50 h-full w-full cursor-pointer opacity-0"
                         disabled={isUploading}
                     />
-                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-secondary/50 text-foreground">
-                        {isUploading ? <Loader2 className="size-8 animate-spin" /> : <UploadCloud className="size-8" />}
-                    </div>
-                    <h3 className="mb-2 text-lg font-semibold tracking-tight">
-                        {isUploading ? "Uploading Resume..." : "Click or drag and drop to upload"}
-                    </h3>
-                    <p className="mb-8 max-w-md text-sm text-muted-foreground">
-                        PDF files up to 5MB supported. It is strictly used for analysis metrics.
-                    </p>
+                    {errorMsg ? (
+                        <>
+                            <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                                <AlertTriangle className="size-8" />
+                            </div>
+                            <h3 className="mb-2 text-lg font-semibold tracking-tight text-destructive">Parsing Failed</h3>
+                            <p className="mb-8 max-w-md text-sm text-muted-foreground relative z-10 pointer-events-none">
+                                {errorMsg}
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-secondary/50 text-foreground">
+                                {isUploading ? <Loader2 className="size-8 animate-spin" /> : <UploadCloud className="size-8" />}
+                            </div>
+                            <h3 className="mb-2 text-lg font-semibold tracking-tight">
+                                {isUploading ? "Uploading Resume..." : "Click or drag and drop to upload"}
+                            </h3>
+                            <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                                PDF files up to 5MB supported. It is strictly used for analysis metrics.
+                            </p>
+                        </>
+                    )}
                     <Button
                         type="button"
                         disabled={isUploading}
@@ -99,6 +136,11 @@ export default function ResumeUploadPage() {
                             <>
                                 <Loader2 className="size-4 animate-spin" />
                                 Parsing...
+                            </>
+                        ) : errorMsg ? (
+                            <>
+                                <UploadCloud className="size-4.5" />
+                                Try Another File
                             </>
                         ) : (
                             <>

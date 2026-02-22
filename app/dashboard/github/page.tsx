@@ -2,17 +2,36 @@
 
 import { useState } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { Github, Star, GitCommit, CheckCircle2, Loader2, GitPullRequest } from "lucide-react"
+import { Github, Star, GitCommit, CheckCircle2, Loader2, GitPullRequest, AlertTriangle } from "lucide-react"
 
 export default function GithubConnectionPage() {
     const { github, connectGithub } = useDevProfileStore()
+    const { toast } = useToast()
     const [isConnecting, setIsConnecting] = useState(false)
+    const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
     const handleConnect = async () => {
         setIsConnecting(true)
-        await connectGithub("johndoe_dev") // Mocking an auth flow callback username
-        setIsConnecting(false)
+        setErrorMsg(null)
+        try {
+            await connectGithub("johndoe_dev") // Mocking an auth flow callback username
+            toast({
+                title: "GitHub Connected",
+                description: "Your repositories have been successfully synced.",
+            })
+        } catch (error: any) {
+            const message = error.message || "An unexpected error occurred."
+            setErrorMsg(message)
+            toast({
+                variant: "destructive",
+                title: "Connection Failed",
+                description: message,
+            })
+        } finally {
+            setIsConnecting(false)
+        }
     }
 
     // --- EMPTY STATE ---
@@ -27,30 +46,43 @@ export default function GithubConnectionPage() {
                 </div>
 
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20 text-center bg-card shadow-sm">
-                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-secondary/50 text-foreground">
-                        <Github className="size-8" />
-                    </div>
-                    <h3 className="mb-2 text-lg font-semibold tracking-tight">Connect your GitHub to start evaluation</h3>
-                    <p className="mb-8 max-w-md text-sm text-muted-foreground">
-                        We will scan your public repositories to generate a comprehensive hireability score. We never store your source code.
-                    </p>
-                    <Button
-                        onClick={handleConnect}
-                        disabled={isConnecting}
-                        className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm transition-all active:scale-95"
-                    >
-                        {isConnecting ? (
-                            <>
-                                <Loader2 className="size-4 animate-spin" />
-                                Connecting...
-                            </>
-                        ) : (
-                            <>
-                                <Github className="size-4.5" />
-                                Connect with GitHub
-                            </>
-                        )}
-                    </Button>
+                    {errorMsg ? (
+                        <>
+                            <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                                <AlertTriangle className="size-8" />
+                            </div>
+                            <h3 className="mb-2 text-lg font-semibold tracking-tight text-destructive">Connection Failed</h3>
+                            <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                                {errorMsg}
+                            </p>
+                            <Button
+                                onClick={handleConnect}
+                                disabled={isConnecting}
+                                className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm transition-all active:scale-95"
+                            >
+                                {isConnecting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Github className="mr-2 size-4.5" />}
+                                Try Again
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-secondary/50 text-foreground">
+                                <Github className="size-8" />
+                            </div>
+                            <h3 className="mb-2 text-lg font-semibold tracking-tight">Connect your GitHub to start evaluation</h3>
+                            <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                                We will scan your public repositories to generate a comprehensive hireability score. We never store your source code.
+                            </p>
+                            <Button
+                                onClick={handleConnect}
+                                disabled={isConnecting}
+                                className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm transition-all active:scale-95"
+                            >
+                                {isConnecting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Github className="mr-2 size-4.5" />}
+                                {isConnecting ? "Connecting..." : "Connect with GitHub"}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         )

@@ -17,7 +17,9 @@ import {
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme()
     const router = useRouter()
-    const { logout, resetAccount } = useDevProfileStore()
+    const { logout, resetAccount, analysis } = useDevProfileStore()
+
+    const isProcessing = analysis.status === "processing"
 
     // Allows setting the workflow step and bypassing strict action mapping for internal utility
     const forceReRunAnalysis = () => {
@@ -111,7 +113,13 @@ export default function SettingsPage() {
                             <h4 className="font-semibold text-foreground">Re-run Analysis</h4>
                             <p className="text-sm text-muted-foreground">Keep your stored GitHub and Resume data, but re-evaluate the metrics.</p>
                         </div>
-                        <Button onClick={forceReRunAnalysis} variant="secondary" className="shrink-0">
+                        <Button
+                            onClick={forceReRunAnalysis}
+                            variant="secondary"
+                            className="shrink-0"
+                            disabled={isProcessing}
+                            title={isProcessing ? "Disabled while analysis is running" : "Re-evaluate logic"}
+                        >
                             <RefreshCw className="size-4 mr-2" />
                             Re-evaluate
                         </Button>
@@ -122,7 +130,13 @@ export default function SettingsPage() {
                             <h4 className="font-semibold text-destructive">Delete Dashboard Data</h4>
                             <p className="text-sm text-muted-foreground">Wipes all simulated pipeline data from the global store. Reverts you to the start.</p>
                         </div>
-                        <Button onClick={handleResetData} variant="destructive" className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                        <Button
+                            onClick={handleResetData}
+                            variant="destructive"
+                            className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                            disabled={isProcessing}
+                            title={isProcessing ? "Disabled while analysis is running" : "Delete User Configuration"}
+                        >
                             Delete Data
                         </Button>
                     </div>
@@ -132,7 +146,13 @@ export default function SettingsPage() {
                             <h4 className="font-semibold text-foreground">Logout</h4>
                             <p className="text-sm text-muted-foreground">Completely erases the session and all local store data, returning to the landing page.</p>
                         </div>
-                        <Button onClick={handleLogout} variant="outline" className="shrink-0">
+                        <Button
+                            onClick={handleLogout}
+                            variant="outline"
+                            className="shrink-0"
+                            disabled={isProcessing}
+                            title={isProcessing ? "Disabled while analysis is running" : "Logout Profile Session"}
+                        >
                             <LogOut className="size-4 mr-2 text-muted-foreground" />
                             Logout Session
                         </Button>
