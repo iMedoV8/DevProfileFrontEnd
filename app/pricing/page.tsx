@@ -29,7 +29,7 @@ export default function PricingPage() {
     },
     {
       name: "Pro",
-      price: "$9",
+      price: "$5",
       period: "/ month",
       description: "Everything you need to land interviews",
       features: [
