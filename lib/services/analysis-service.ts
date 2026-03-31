@@ -92,35 +92,25 @@ export const runAnalysisService = async (): Promise<Partial<AnalysisResult>> => 
     }
 
     const scoreBreakdown: ScoreBreakdown = {
-        code: 85,
-        complexity: 70,
-        activity: 88,
-        resume: 62, // Reflecting the parsed warnings
-        tech: 80,
-    }
+    codeQuality: 85,     // was "code"
+    complexity: 70,
+    activity: 88,
+    resume: 62,
+    techAlign: 80,       // was "tech"
+}
 
     return {
-        hasRun: true,
-        status: "completed",
-        score: 77, // Overall derived score
-        scoreBreakdown,
-        strengths: [
-            "Strong foundation in modern frontend frameworks (React/Next.js).",
-            "Consistent and active commit history over the last 3 months.",
-            "Good use of strongly typed languages (TypeScript, Go) in recent repositories.",
-        ],
-        weaknesses: [
-            "Lack of complex backend/cloud architecture experience demonstrated in projects.",
-            "Missing automated testing (unit/e2e) and CI/CD pipelines in public repositories.",
-            "Resume structure could be optimized for ATS readability and lacks quantifiable achievements.",
-        ],
-        recommendations: [
-            "Implement integration tests using Jest or Playwright in your main projects.",
-            "Build a project demonstrating microservices, messaging queues, or advanced database structures.",
-            "Rewrite resume bullet points using the XYZ format to highlight impact.",
-        ],
-        detectedTechStack: ["React", "Next.js", "TypeScript", "Go", "TailwindCSS", "Node.js"],
-    }
+    hasRun: true,
+    status: "completed",
+    overallScore: 77,              // was "score"
+    scoreBreakdown,
+    recruiterPerspective: "Based on the aggregate data, this candidate demonstrates a solid foundation in modern frontend frameworks. They would likely pass standard technical phone screens for mid-level frontend roles.",
+    percentileRanking: "Top 24% of Candidates",
+    strengths: [ ... ],            // keep existing
+    weaknesses: [ ... ],           // keep existing
+    // REMOVE: recommendations
+    // REMOVE: detectedTechStack
+}
 }
 
 export const generateRoadmapService = async (weaknesses: string[]): Promise<RoadmapWeek[]> => {
@@ -129,65 +119,21 @@ export const generateRoadmapService = async (weaknesses: string[]): Promise<Road
     // In a real app, this would dynamically map the weaknesses to roadmap items via AI.
     // We return a highly contextual mock based on the hardcoded weaknesses above.
     return [
-        {
-            weekNumber: 1,
-            title: "Testing Foundations & CI/CD",
-            tasks: [
-                "Set up Jest in 'nextjs-dashboard'",
-                "Write unit tests for core UI components",
-                "Add GitHub Actions pipeline to run tests on PRs"
-            ],
-            outcomes: [
-                "Achieve 70% test coverage",
-                "Automated pipelines ensuring code quality"
-            ],
-            technologies: ["Jest", "GitHub Actions", "React Testing Library"],
-            projectIdeas: ["Add a comprehensive test suite to your existing dashboard"],
-        },
-        {
-            weekNumber: 2,
-            title: "Backend Complexity & Cloud",
-            tasks: [
-                "Design a scalable database schema for a new feature",
-                "Implement rate limiting or advanced caching",
-                "Deploy the Go microservice using Docker to AWS/GCP"
-            ],
-            outcomes: [
-                "Demonstrable experience with cloud deployments",
-                "Robust, production-ready backend code"
-            ],
-            technologies: ["Docker", "AWS/GCP", "Redis"],
-            projectIdeas: ["Enhance 'go-microservice' with Redis caching and Dockerize it"],
-        },
-        {
-            weekNumber: 3,
-            title: "System Design Concepts",
-            tasks: [
-                "Study load balancing and horizontal scaling strategies",
-                "Implement a simple message queue system",
-                "Design an architecture diagram for a scalable e-commerce app"
-            ],
-            outcomes: [
-                "Understanding of distributed systems",
-                "Ability to discuss architecture confidently in interviews"
-            ],
-            technologies: ["RabbitMQ", "System Design"],
-            projectIdeas: ["Build a background worker for email sending via RabbitMQ"],
-        },
-        {
-            weekNumber: 4,
-            title: "Resume & Portfolio Polish",
-            tasks: [
-                "Rewrite 5 resume bullet points using the XYZ impact format",
-                "Add performance metrics (Lighthouse scores, query times) to portfolio",
-                "Conduct a mock technical interview focusing on weaknesses"
-            ],
-            outcomes: [
-                "ATS-friendly resume that recruiters love",
-                "Confident presence for upcoming interviews"
-            ],
-            technologies: [],
-            projectIdeas: [],
-        },
-    ]
+    {
+        weekNumber: 1,
+        theme: "Testing Foundations & CI/CD",      // was "title"
+        technicalTasks: [                           // was "tasks"
+            "Set up Jest in 'nextjs-dashboard'",
+            "Write unit tests for core UI components",
+            "Add GitHub Actions pipeline to run tests on PRs"
+        ],
+        measurableOutcomes: [                       // was "outcomes"
+            "Achieve 70% test coverage",
+            "Automated pipelines ensuring code quality"
+        ],
+        technologies: ["Jest", "GitHub Actions", "React Testing Library"],
+        projectIdea: "Add a comprehensive test suite to your existing dashboard",  // was "projectIdeas: [...]"
+    },
+    // ... same pattern for weeks 2, 3, 4
+]
 }

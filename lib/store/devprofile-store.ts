@@ -58,17 +58,19 @@ const initialState = {
         warnings: [],
     },
     analysis: {
-        hasRun: false,
-        status: "idle" as const,
-        analysisStartedAt: null,
-        analysisDuration: 15000, // 15 seconds required simulation time
-        score: 0,
-        scoreBreakdown: null,
-        strengths: [],
-        weaknesses: [],
-        recommendations: [],
-        detectedTechStack: [],
-    },
+    hasRun: false,
+    status: "idle" as const,
+    analysisStartedAt: null,
+    analysisDuration: 15000,
+    overallScore: 0,              // was "score"
+    scoreBreakdown: null,
+    recruiterPerspective: null,   // NEW
+    percentileRanking: null,      // NEW
+    strengths: [],
+    weaknesses: [],
+    // REMOVE: recommendations: [],
+    // REMOVE: detectedTechStack: [],
+},
     roadmap: null,
     workflowStep: "START" as WorkflowStep,
 }

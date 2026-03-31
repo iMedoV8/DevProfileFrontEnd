@@ -40,7 +40,7 @@ export default function ReportPage() {
     }
 
     // --- POPULATED STATE ---
-    const { score, scoreBreakdown, strengths, weaknesses, recommendations, detectedTechStack, lastAnalyzedAt } = analysis
+    const { overallScore, scoreBreakdown, strengths, weaknesses, recruiterPerspective, percentileRanking, lastAnalyzedAt } = analysis
 
     return (
         <div className="flex flex-col gap-8 pb-10">
@@ -72,7 +72,7 @@ export default function ReportPage() {
                     </h2>
                     <div className="relative z-10 p-4 rounded-xl bg-secondary/30 border border-border/50">
                         <p className="text-sm font-medium leading-relaxed text-foreground/90">
-                            "Based on the aggregate data, this candidate demonstrates a solid foundation in {detectedTechStack[0]} and {detectedTechStack[1]}. They would likely pass standard technical phone screens for mid-level frontend roles. However, the lack of demonstrated backend testing and cloud infrastructure might pause progression in strictly full-stack or senior backend interviews. A compelling candidate with clear potential."
+                            {recruiterPerspective}
                         </p>
                     </div>
                 </div>
@@ -81,7 +81,7 @@ export default function ReportPage() {
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Overall Hireability</h3>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-6xl font-black tracking-tighter text-foreground">{score}</span>
+                        <span className="text-6xl font-black tracking-tighter text-foreground">{overallScore}</span>
                         <span className="text-lg font-bold text-muted-foreground">/100</span>
                     </div>
                     <div className="mt-4 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary border border-primary/20">
@@ -95,11 +95,11 @@ export default function ReportPage() {
                 <h2 className="text-lg font-semibold tracking-tight mb-4">Score Breakdown</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     {[
-                        { label: "Code Quality", score: scoreBreakdown?.code, icon: Code },
+                        { label: "Code Quality", score: scoreBreakdown?.codeQuality, icon: Code },
                         { label: "Complexity", score: scoreBreakdown?.complexity, icon: Zap },
                         { label: "Activity", score: scoreBreakdown?.activity, icon: Activity },
                         { label: "Resume", score: scoreBreakdown?.resume, icon: FileText },
-                        { label: "Tech Align", score: scoreBreakdown?.tech, icon: GitMerge },
+                        { label: "Tech Align", score: scoreBreakdown?.techAlign, icon: GitMerge },
                     ].map((item) => (
                         <div key={item.label} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm">
                             <item.icon className="size-5 text-muted-foreground mb-3" />

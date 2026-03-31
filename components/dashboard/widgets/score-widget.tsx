@@ -14,7 +14,7 @@ export function ScoreWidget() {
     // Circle Math
     const radius = 48
     const circumference = 2 * Math.PI * radius
-    const offset = hasAnalysis ? circumference - (analysis.score / 100) * circumference : circumference
+    const offset = hasAnalysis ? circumference - (analysis.overallScore / 100) * circumference : circumference
 
     return (
         <div className="flex h-full flex-col justify-between rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -46,7 +46,7 @@ export function ScoreWidget() {
                                 strokeLinecap="round"
                                 className={cn(
                                     "transition-all duration-1000 ease-out",
-                                    analysis.score >= 80 ? "text-green-500" : analysis.score >= 60 ? "text-yellow-500" : "text-red-500"
+                                    analysis.overallScore >= 80 ? "text-green-500" : analysis.overallScore >= 60 ? "text-yellow-500" : "text-red-500"
                                 )}
                                 strokeDasharray={circumference}
                                 strokeDashoffset={offset}
@@ -57,7 +57,7 @@ export function ScoreWidget() {
                         {hasAnalysis ? (
                             <>
                                 <span className="text-3xl font-bold tracking-tighter text-foreground">
-                                    {analysis.score}
+                                    {analysis.overallScore}
                                 </span>
                                 <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                                     / 100

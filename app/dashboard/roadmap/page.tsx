@@ -58,7 +58,7 @@ export default function RoadmapPage() {
 
                         <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-border/80">
                             <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                                <h2 className="text-xl font-bold tracking-tight text-foreground">{week.title}</h2>
+                                <h2 className="text-xl font-bold tracking-tight text-foreground">{week.theme}</h2>
                             </div>
 
                             <div className="grid gap-6 md:grid-cols-2">
@@ -68,7 +68,7 @@ export default function RoadmapPage() {
                                         <Target className="size-4" /> Technical Tasks
                                     </h3>
                                     <ul className="flex flex-col gap-2">
-                                        {week.tasks.map((task, i) => (
+                                        {week.technicalTasks.map((task, i) => (
                                             <li key={i} className="flex items-start gap-2.5 text-sm">
                                                 <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" />
                                                 <span className="text-foreground/90">{task}</span>
@@ -83,7 +83,7 @@ export default function RoadmapPage() {
                                         <CheckCircle2 className="size-4 text-green-500" /> Measurable Outcomes
                                     </h3>
                                     <ul className="flex flex-col gap-2">
-                                        {week.outcomes.map((outcome, i) => (
+                                        {week.measurableOutcomes.map((outcome, i) => (
                                             <li key={i} className="flex items-start gap-2.5 text-sm">
                                                 <span className="mt-1 size-1.5 shrink-0 rounded-full bg-green-500/70" />
                                                 <span className="text-muted-foreground">{outcome}</span>
@@ -106,11 +106,11 @@ export default function RoadmapPage() {
                                     </div>
                                 )}
 
-                                {week.projectIdeas.length > 0 && (
+                                {week.projectIdea && (
                                     <div className="flex items-center gap-2">
                                         <Lightbulb className="size-4 text-amber-500" />
                                         <span className="text-xs font-medium text-muted-foreground">
-                                            <span className="font-semibold text-foreground">Idea:</span> {week.projectIdeas[0]}
+                                            <span className="font-semibold text-foreground">Idea:</span> {week.projectIdea}
                                         </span>
                                     </div>
                                 )}

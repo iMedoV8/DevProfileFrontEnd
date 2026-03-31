@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Github, Star, GitCommit, CheckCircle2, Loader2, GitPullRequest, AlertTriangle } from "lucide-react"
 
 export default function GithubConnectionPage() {
@@ -11,12 +12,17 @@ export default function GithubConnectionPage() {
     const { toast } = useToast()
     const [isConnecting, setIsConnecting] = useState(false)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
+    const [usernameInput, setUsernameInput] = useState("")
 
     const handleConnect = async () => {
+        if (!usernameInput.trim()) {
+            toast({ variant: "destructive", title: "Error", description: "Please enter a GitHub username" })
+            return
+        }
         setIsConnecting(true)
         setErrorMsg(null)
         try {
-            await connectGithub("johndoe_dev") // Mocking an auth flow callback username
+            await connectGithub(usernameInput.trim())
             toast({
                 title: "GitHub Connected",
                 description: "Your repositories have been successfully synced.",
@@ -52,9 +58,15 @@ export default function GithubConnectionPage() {
                                 <AlertTriangle className="size-8" />
                             </div>
                             <h3 className="mb-2 text-lg font-semibold tracking-tight text-destructive">Connection Failed</h3>
-                            <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                            <p className="mb-6 max-w-md text-sm text-muted-foreground">
                                 {errorMsg}
                             </p>
+                            <Input
+                                placeholder="Enter your GitHub username"
+                                value={usernameInput}
+                                onChange={(e) => setUsernameInput(e.target.value)}
+                                className="max-w-sm mb-4"
+                            />
                             <Button
                                 onClick={handleConnect}
                                 disabled={isConnecting}
@@ -70,9 +82,15 @@ export default function GithubConnectionPage() {
                                 <Github className="size-8" />
                             </div>
                             <h3 className="mb-2 text-lg font-semibold tracking-tight">Connect your GitHub to start evaluation</h3>
-                            <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                            <p className="mb-6 max-w-md text-sm text-muted-foreground">
                                 We will scan your public repositories to generate a comprehensive hireability score. We never store your source code.
                             </p>
+                            <Input
+                                placeholder="Enter your GitHub username"
+                                value={usernameInput}
+                                onChange={(e) => setUsernameInput(e.target.value)}
+                                className="max-w-sm mb-4"
+                            />
                             <Button
                                 onClick={handleConnect}
                                 disabled={isConnecting}

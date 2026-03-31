@@ -43,6 +43,7 @@ export default function SettingsPage() {
     }
 
     const handleLogout = () => {
+        localStorage.removeItem("token")
         logout()
         router.push("/")
     }

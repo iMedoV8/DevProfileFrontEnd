@@ -43,11 +43,11 @@ export interface ResumeData {
 }
 
 export interface ScoreBreakdown {
-    code: number
+    codeQuality: number
     complexity: number
     activity: number
     resume: number
-    tech: number
+    techAlign: number
 }
 
 export interface AnalysisResult {
@@ -55,20 +55,22 @@ export interface AnalysisResult {
     status: AnalysisStatus
     analysisStartedAt: number | null
     analysisDuration: number | null
-    score: number
+    overallScore: number                // was "score" -- matches backend
     scoreBreakdown: ScoreBreakdown | null
+    recruiterPerspective: string | null // NEW -- backend returns this from AI
+    percentileRanking: string | null    // NEW -- backend returns this
     strengths: string[]
     weaknesses: string[]
-    recommendations: string[]
-    detectedTechStack: string[]
-    lastAnalyzedAt?: number // Added for localized relative timestamps
+    // REMOVED: recommendations (backend doesn't have this)
+    // REMOVED: detectedTechStack (backend doesn't have this)
+    lastAnalyzedAt?: number
 }
 
 export interface RoadmapWeek {
     weekNumber: number
-    title: string
-    tasks: string[]
-    outcomes: string[]
+    theme: string               // was "title" -- matches backend
+    technicalTasks: string[]    // was "tasks" -- matches backend
+    measurableOutcomes: string[]  // was "outcomes" -- matches backend
     technologies: string[]
-    projectIdeas: string[]
+    projectIdea: string | null  // was "projectIdeas: string[]" -- backend returns single string
 }
