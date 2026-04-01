@@ -1,3 +1,5 @@
+// ── Workflow & Status ──
+
 export type WorkflowStep =
     | "START"
     | "GITHUB_CONNECTED"
@@ -7,10 +9,30 @@ export type WorkflowStep =
 
 export type AnalysisStatus =
     | "idle"
-    | "uploading"
     | "processing"
-    | "finalizing"
     | "completed"
+    | "failed"
+
+// ── Auth ──
+
+export interface LoginRequest {
+    username: string
+    password: string
+}
+
+export interface LoginResponse {
+    token: string
+    username: string
+    role: string
+}
+
+export interface RegisterRequest {
+    username: string
+    email: string
+    password: string
+}
+
+// ── User ──
 
 export interface UserProfile {
     name: string
@@ -18,8 +40,58 @@ export interface UserProfile {
     isAuthenticated: boolean
 }
 
+// ── Session (backend AnalysisSessionResponse) ──
+
+export interface SessionResponse {
+    id: number
+    status: "CREATED" | "IN_PROGRESS" | "COMPLETED" | "FAILED"
+    workflowStep: string | null
+    hireabilityScore: number | null
+    archived: boolean
+    createdAt: string
+    updatedAt: string
+    reportViewedAt: string | null
+}
+
+// ── Dashboard (backend DashboardResponse) ──
+
+export interface DashboardResponse {
+    username: string
+    email: string
+    githubConnected: boolean
+    resumeUploaded: boolean
+    analysisCompleted: boolean
+    hireabilityScore: number | null
+    percentileRanking: string | null
+    checklist: {
+        githubConnected: boolean
+        resumeUploaded: boolean
+        analysisRun: boolean
+        reportViewed: boolean
+        progressPercent: number
+    }
+}
+
+// ── GitHub (backend GitHubProfileResponse) ──
+
+export interface GitHubRepositorySnapshot {
+    name: string
+    description: string | null
+    primaryLanguage: string | null
+    stars: number
+    lastUpdated: string
+}
+
+export interface GitHubProfileResponse {
+    username: string
+    totalRepos: number
+    totalStars: number
+    contributionsLastYear: number
+    topRepositories: GitHubRepositorySnapshot[]
+}
+
+// Frontend-friendly shape used in store and components
 export interface GithubRepository {
-    id: string
     name: string
     description: string | null
     stars: number
@@ -30,17 +102,43 @@ export interface GithubRepository {
 export interface GithubData {
     isConnected: boolean
     username: string | null
+    totalRepos: number
+    totalStars: number
+    contributionsLastYear: number
     repositories: GithubRepository[]
     languages: string[]
+}
+
+// ── Resume (backend ResumeProfileResponse) ──
+
+export interface ResumeProfileResponse {
+    originalFilename: string
+    fileSize: number
+    extractedTextPreview: string
+    extractedTextLength: number
+    uploadedAt: string
 }
 
 export interface ResumeData {
     uploaded: boolean
     filename: string | null
+    fileSize: number | null
+    extractedTextPreview: string | null
+    extractedTextLength: number | null
     uploadedAt: string | null
-    skills: string[]
-    warnings: string[]
 }
+
+// ── Analysis Status (backend AnalysisStatusResponse) ──
+
+export interface AnalysisStatusResponse {
+    status: string
+    workflowStep: string
+    progressPercent: number
+    message: string
+    completed: boolean
+}
+
+// ── Report (backend ReportResponse) ──
 
 export interface ScoreBreakdown {
     codeQuality: number
@@ -50,27 +148,44 @@ export interface ScoreBreakdown {
     techAlign: number
 }
 
+export interface ReportResponse {
+    recruiterPerspective: string
+    overallScore: number
+    percentileRanking: string
+    scoreBreakdown: ScoreBreakdown
+    strengths: string[]
+    weaknesses: string[]
+    generatedAt: string
+}
+
 export interface AnalysisResult {
     hasRun: boolean
     status: AnalysisStatus
-    analysisStartedAt: number | null
-    analysisDuration: number | null
-    overallScore: number                // was "score" -- matches backend
+    progressPercent: number
+    progressMessage: string | null
+    overallScore: number
     scoreBreakdown: ScoreBreakdown | null
-    recruiterPerspective: string | null // NEW -- backend returns this from AI
-    percentileRanking: string | null    // NEW -- backend returns this
+    recruiterPerspective: string | null
+    percentileRanking: string | null
     strengths: string[]
     weaknesses: string[]
-    // REMOVED: recommendations (backend doesn't have this)
-    // REMOVED: detectedTechStack (backend doesn't have this)
-    lastAnalyzedAt?: number
+    generatedAt: string | null
 }
+
+// ── Roadmap (backend RoadmapResponse) ──
 
 export interface RoadmapWeek {
     weekNumber: number
-    theme: string               // was "title" -- matches backend
-    technicalTasks: string[]    // was "tasks" -- matches backend
-    measurableOutcomes: string[]  // was "outcomes" -- matches backend
+    theme: string
+    technicalTasks: string[]
+    measurableOutcomes: string[]
     technologies: string[]
-    projectIdea: string | null  // was "projectIdeas: string[]" -- backend returns single string
+    projectIdea: string | null
+}
+
+export interface RoadmapResponse {
+    summary: string
+    totalWeeks: number
+    weeks: RoadmapWeek[]
+    generatedAt: string
 }

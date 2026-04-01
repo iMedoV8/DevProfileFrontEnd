@@ -1,13 +1,19 @@
 "use client"
 
+import { useEffect } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
-import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { PieChart, Download, ArrowRight, ShieldCheck, ThumbsUp, ThumbsDown, Activity, Code, GitMerge, FileText, Zap } from "lucide-react"
 import Link from "next/link"
 
 export default function ReportPage() {
-    const { analysis } = useDevProfileStore()
+    const { analysis, loadReport, currentSessionId } = useDevProfileStore()
+
+    useEffect(() => {
+        if (currentSessionId && analysis.hasRun && analysis.status === "completed" && !analysis.recruiterPerspective) {
+            loadReport()
+        }
+    }, [currentSessionId, analysis.hasRun, analysis.status, analysis.recruiterPerspective, loadReport])
 
     // --- EMPTY STATE ---
     if (!analysis.hasRun || analysis.status !== "completed") {
@@ -26,7 +32,7 @@ export default function ReportPage() {
                     </div>
                     <h3 className="mb-2 text-lg font-semibold tracking-tight">Run analysis to generate your developer report</h3>
                     <p className="mb-8 max-w-md text-sm text-muted-foreground">
-                        We need to evaluate your GitHub repositories and Resume structural data before we can provide actionable recruiter feedback.
+                        We need to evaluate your GitHub repositories and Resume data before we can provide actionable recruiter feedback.
                     </p>
                     <Link href="/dashboard/analysis" className="outline-none">
                         <Button className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95">
@@ -40,7 +46,7 @@ export default function ReportPage() {
     }
 
     // --- POPULATED STATE ---
-    const { overallScore, scoreBreakdown, strengths, weaknesses, recruiterPerspective, percentileRanking, lastAnalyzedAt } = analysis
+    const { overallScore, scoreBreakdown, strengths, weaknesses, recruiterPerspective, percentileRanking, generatedAt } = analysis
 
     return (
         <div className="flex flex-col gap-8 pb-10">
@@ -49,12 +55,12 @@ export default function ReportPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Developer Report</h1>
                     <p className="mt-2 text-muted-foreground flex flex-col gap-1">
                         <span>Confidential hireability evaluation based on your public profiles.</span>
-                        {lastAnalyzedAt && (
-                            <span className="text-xs font-medium text-foreground/50">Last updated {formatDistanceToNow(lastAnalyzedAt, { addSuffix: true })}</span>
+                        {generatedAt && (
+                            <span className="text-xs font-medium text-foreground/50">Generated {new Date(generatedAt).toLocaleDateString()}</span>
                         )}
                     </p>
                 </div>
-                <Button onClick={() => alert("Downloading PDF... (Mock)")} className="flex items-center gap-2 rounded-xl bg-accent text-foreground hover:bg-accent/80 transition-colors shadow-sm">
+                <Button onClick={() => alert("PDF download coming soon!")} className="flex items-center gap-2 rounded-xl bg-accent text-foreground hover:bg-accent/80 transition-colors shadow-sm">
                     <Download className="size-4" />
                     Download PDF
                 </Button>
@@ -84,9 +90,11 @@ export default function ReportPage() {
                         <span className="text-6xl font-black tracking-tighter text-foreground">{overallScore}</span>
                         <span className="text-lg font-bold text-muted-foreground">/100</span>
                     </div>
-                    <div className="mt-4 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary border border-primary/20">
-                        Top 24% of Candidates
-                    </div>
+                    {percentileRanking && (
+                        <div className="mt-4 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary border border-primary/20">
+                            {percentileRanking}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -103,7 +111,7 @@ export default function ReportPage() {
                     ].map((item) => (
                         <div key={item.label} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm">
                             <item.icon className="size-5 text-muted-foreground mb-3" />
-                            <span className="text-2xl font-bold">{item.score}</span>
+                            <span className="text-2xl font-bold">{item.score ?? "—"}</span>
                             <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 text-center">{item.label}</span>
                         </div>
                     ))}

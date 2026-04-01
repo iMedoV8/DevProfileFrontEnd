@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import {
     Moon,
@@ -12,38 +13,44 @@ import {
     LogOut,
     RefreshCw,
     Settings as SettingsIcon,
+    Archive,
 } from "lucide-react"
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme()
     const router = useRouter()
-    const { logout, resetAccount, analysis } = useDevProfileStore()
+    const { toast } = useToast()
+    const { logout, analysis, currentSessionId, archiveCurrentSession, createNewSession } = useDevProfileStore()
 
     const isProcessing = analysis.status === "processing"
 
-    // Allows setting the workflow step and bypassing strict action mapping for internal utility
-    const forceReRunAnalysis = () => {
-        useDevProfileStore.setState((state) => ({
-            analysis: {
-                ...state.analysis,
-                hasRun: false,
-                status: "idle",
-                scoreBreakdown: null,
-            },
-            workflowStep: "RESUME_UPLOADED",
-        }))
-        router.push("/dashboard/analysis")
+    const handleReRunAnalysis = async () => {
+        try {
+            await createNewSession()
+            toast({ title: "New Session Created", description: "You can now re-run the analysis with fresh data." })
+            router.push("/dashboard")
+        } catch (err: any) {
+            toast({ variant: "destructive", title: "Error", description: err?.message || "Failed to create session." })
+        }
     }
 
-    const handleResetData = () => {
-        if (confirm("Are you sure you want to delete all stored GitHub and Resume data? Your account will remain active.")) {
-            resetAccount()
-            router.push("/dashboard")
+    const handleArchiveSession = async () => {
+        if (!currentSessionId) {
+            toast({ variant: "destructive", title: "Error", description: "No active session to archive." })
+            return
+        }
+        if (confirm("Are you sure you want to archive this session? You can still view it, but it cannot be modified.")) {
+            try {
+                await archiveCurrentSession()
+                toast({ title: "Session Archived", description: "The session has been archived." })
+                router.push("/dashboard")
+            } catch (err: any) {
+                toast({ variant: "destructive", title: "Error", description: err?.message || "Failed to archive session." })
+            }
         }
     }
 
     const handleLogout = () => {
-        localStorage.removeItem("token")
         logout()
         router.push("/")
     }
@@ -111,51 +118,52 @@ export default function SettingsPage() {
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-border bg-background/50 relative z-10 mb-2">
                         <div className="mb-4 sm:mb-0">
-                            <h4 className="font-semibold text-foreground">Re-run Analysis</h4>
-                            <p className="text-sm text-muted-foreground">Keep your stored GitHub and Resume data, but re-evaluate the metrics.</p>
+                            <h4 className="font-semibold text-foreground">New Analysis</h4>
+                            <p className="text-sm text-muted-foreground">Create a new session and start a fresh evaluation from scratch.</p>
                         </div>
                         <Button
-                            onClick={forceReRunAnalysis}
+                            onClick={handleReRunAnalysis}
                             variant="secondary"
                             className="shrink-0"
                             disabled={isProcessing}
-                            title={isProcessing ? "Disabled while analysis is running" : "Re-evaluate logic"}
+                            title={isProcessing ? "Disabled while analysis is running" : "Start new analysis"}
                         >
                             <RefreshCw className="size-4 mr-2" />
-                            Re-evaluate
+                            New Session
                         </Button>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-destructive/30 bg-destructive/5 relative z-10 mb-2">
-                        <div className="mb-4 sm:mb-0">
-                            <h4 className="font-semibold text-destructive">Delete Dashboard Data</h4>
-                            <p className="text-sm text-muted-foreground">Wipes all simulated pipeline data from the global store. Reverts you to the start.</p>
+                    {currentSessionId && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-destructive/30 bg-destructive/5 relative z-10 mb-2">
+                            <div className="mb-4 sm:mb-0">
+                                <h4 className="font-semibold text-destructive">Archive Current Session</h4>
+                                <p className="text-sm text-muted-foreground">Archive this session. It will become read-only and can no longer be modified.</p>
+                            </div>
+                            <Button
+                                onClick={handleArchiveSession}
+                                variant="destructive"
+                                className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                                disabled={isProcessing}
+                            >
+                                <Archive className="size-4 mr-2" />
+                                Archive Session
+                            </Button>
                         </div>
-                        <Button
-                            onClick={handleResetData}
-                            variant="destructive"
-                            className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                            disabled={isProcessing}
-                            title={isProcessing ? "Disabled while analysis is running" : "Delete User Configuration"}
-                        >
-                            Delete Data
-                        </Button>
-                    </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-border bg-background/50 relative z-10">
                         <div className="mb-4 sm:mb-0">
                             <h4 className="font-semibold text-foreground">Logout</h4>
-                            <p className="text-sm text-muted-foreground">Completely erases the session and all local store data, returning to the landing page.</p>
+                            <p className="text-sm text-muted-foreground">Sign out and return to the landing page.</p>
                         </div>
                         <Button
                             onClick={handleLogout}
                             variant="outline"
                             className="shrink-0"
                             disabled={isProcessing}
-                            title={isProcessing ? "Disabled while analysis is running" : "Logout Profile Session"}
                         >
                             <LogOut className="size-4 mr-2 text-muted-foreground" />
-                            Logout Session
+                            Logout
                         </Button>
                     </div>
                 </div>

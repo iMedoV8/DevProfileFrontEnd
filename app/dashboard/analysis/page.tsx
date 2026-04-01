@@ -1,65 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Activity, Play, CheckCircle2, ArrowRight, Server, FileCode2, Cpu, FileSpreadsheet } from "lucide-react"
+import { Activity, Play, CheckCircle2, ArrowRight, Cpu, AlertTriangle, Loader2 } from "lucide-react"
 import Link from "next/link"
 
-const MESSAGES = [
-    "Fetching repository metadata from GitHub...",
-    "Cloning and analyzing code structure...",
-    "Running cyclical complexity metrics...",
-    "Parsing commit history and frequency...",
-    "Evaluating Structural ATS Resume formatting...",
-    "Aggregating scores against hiring benchmarks...",
-    "Generating final feedback and recommendations...",
-]
-
 export default function AnalysisPage() {
-    const { analysis, startAnalysis, completeAnalysis } = useDevProfileStore()
+    const { analysis, startAnalysis, createNewSession, currentSessionId } = useDevProfileStore()
+    const router = useRouter()
     const { toast } = useToast()
-    const [progress, setProgress] = useState(0)
-    const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
 
-    // Persistent Time-Based Progress Simulator
-    useEffect(() => {
-        if (analysis.status === "processing" && analysis.analysisStartedAt) {
-            const duration = analysis.analysisDuration || 15000 // 15 seconds
-
-            const animateProgress = () => {
-                const elapsed = Date.now() - analysis.analysisStartedAt!
-                const newProgress = Math.min((elapsed / duration) * 100, 100)
-                setProgress(newProgress)
-
-                // Maps progress [0, 100] to the index of our rotating messages
-                const msgIndex = Math.min(
-                    Math.floor((newProgress / 100) * MESSAGES.length),
-                    MESSAGES.length - 1
-                )
-                setCurrentMessageIndex(msgIndex)
-
-                if (newProgress < 100) {
-                    requestAnimationFrame(animateProgress)
-                } else if (newProgress >= 100 && analysis.status === "processing") {
-                    // Once 100% is hit locally, fire the store action to complete the analysis via API
-                    completeAnalysis().catch((err) => {
-                        toast({
-                            variant: "destructive",
-                            title: "Analysis Failed",
-                            description: err.message || "An error occurred during evaluation.",
-                        })
-                    })
-                }
-            }
-
-            requestAnimationFrame(animateProgress)
+    const handleStartAnalysis = async () => {
+        if (!currentSessionId) {
+            toast({ variant: "destructive", title: "Error", description: "No active session." })
+            return
         }
-    }, [analysis.status, analysis.analysisStartedAt, analysis.analysisDuration, completeAnalysis, toast])
+        try {
+            await startAnalysis()
+        } catch (err: any) {
+            toast({
+                variant: "destructive",
+                title: "Analysis Failed",
+                description: err.message || "Failed to start analysis.",
+            })
+        }
+    }
 
-    // --- EMPTY / IDLE STATE ---
+    // --- IDLE STATE ---
     if (analysis.status === "idle") {
         return (
             <div className="flex flex-col gap-6 max-w-2xl mx-auto mt-10">
@@ -76,10 +46,10 @@ export default function AnalysisPage() {
                     </div>
                     <h3 className="mb-2 text-lg font-semibold tracking-tight">Launch the Evaluator</h3>
                     <p className="mb-8 max-w-md text-sm text-muted-foreground">
-                        This will take approximately 12–18 seconds to fully process across our mock evaluation servers. You may navigate away while this runs.
+                        This will analyze your GitHub repositories and resume using AI. The process typically takes 1-2 minutes. You may navigate away while this runs.
                     </p>
                     <Button
-                        onClick={() => startAnalysis()}
+                        onClick={handleStartAnalysis}
                         size="lg"
                         className="flex h-12 items-center gap-2 rounded-full px-8 shadow-md transition-all hover:scale-105 active:scale-95"
                     >
@@ -91,14 +61,14 @@ export default function AnalysisPage() {
         )
     }
 
-    // --- PROCESSING STATE (Persistent) ---
+    // --- PROCESSING STATE (Real polling) ---
     if (analysis.status === "processing") {
         return (
             <div className="flex flex-col gap-6 max-w-2xl mx-auto mt-10">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Analyzing Profile</h1>
                     <p className="mt-2 text-muted-foreground">
-                        Evaluating your metrics across the DevProfile cloud...
+                        Evaluating your developer profile with AI...
                     </p>
                 </div>
 
@@ -113,17 +83,65 @@ export default function AnalysisPage() {
                     </div>
 
                     <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
-                        {Math.floor(progress)}% Complete
+                        {analysis.progressPercent}% Complete
                     </h2>
 
-                    <Progress value={progress} className="h-3 w-full max-w-sm mb-6" />
+                    <Progress value={analysis.progressPercent} className="h-3 w-full max-w-sm mb-6" />
 
                     <div className="flex items-center justify-center gap-3">
                         <div className="size-2 rounded-full bg-primary animate-ping" />
                         <p className="text-sm font-medium text-muted-foreground w-64 text-left">
-                            {MESSAGES[currentMessageIndex]}
+                            {analysis.progressMessage || "Processing..."}
                         </p>
                     </div>
+                </div>
+            </div>
+        )
+    }
+
+    // --- FAILED STATE ---
+    if (analysis.status === "failed") {
+        const handleRetryWithNewSession = async () => {
+            try {
+                await createNewSession()
+                toast({
+                    title: "New Session Created",
+                    description: "Please connect GitHub and upload your resume again, then re-run the analysis.",
+                })
+                router.push("/dashboard")
+            } catch (err: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: err?.message || "Failed to create new session.",
+                })
+            }
+        }
+
+        return (
+            <div className="flex flex-col gap-6 max-w-2xl mx-auto mt-10">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Analysis Failed</h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Something went wrong during the evaluation.
+                    </p>
+                </div>
+
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/20 py-16 text-center bg-card shadow-sm">
+                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                        <AlertTriangle className="size-8" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold tracking-tight text-destructive">Evaluation Error</h3>
+                    <p className="mb-8 max-w-md text-sm text-muted-foreground">
+                        {analysis.progressMessage || "The AI analysis encountered an error. Please start a new session to try again."}
+                    </p>
+                    <Button
+                        onClick={handleRetryWithNewSession}
+                        className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm"
+                    >
+                        <Play className="size-4 fill-current" />
+                        Start New Session
+                    </Button>
                 </div>
             </div>
         )

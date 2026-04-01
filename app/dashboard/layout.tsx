@@ -9,15 +9,21 @@ import { WorkflowStep } from "@/lib/types/devprofile-types"
 /**
  * Helper to determine if a user has sufficient workflow permissions to view a specific route.
  */
-function isRouteAllowed(pathname: string, workflowStep: WorkflowStep): boolean {
+function isRouteAllowed(pathname: string, workflowStep: WorkflowStep, hasSession: boolean): boolean {
     // Always allowed
     if (
         pathname === "/dashboard" ||
-        pathname === "/dashboard/github" ||
-        pathname === "/dashboard/resume" ||
         pathname === "/dashboard/settings"
     ) {
         return true
+    }
+
+    // GitHub, Resume always allowed if a session is active
+    if (
+        pathname === "/dashboard/github" ||
+        pathname === "/dashboard/resume"
+    ) {
+        return hasSession
     }
 
     // Analysis requires resume to be uploaded at a minimum
@@ -44,7 +50,7 @@ import { cn } from "@/lib/utils"
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const pathname = usePathname()
-    const { user, workflowStep } = useDevProfileStore()
+    const { user, workflowStep, currentSessionId } = useDevProfileStore()
 
     // Handle Next.js hydration mismatch for Zustand persist
     const [isMounted, setIsMounted] = useState(false)
@@ -67,22 +73,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         // Workflow Guard
-        if (!isRouteAllowed(pathname, workflowStep)) {
-            // If they try to skip ahead, redirect them based on their current step to guide them smoothly
-            switch (workflowStep) {
-                case "START":
-                case "GITHUB_CONNECTED":
-                    router.push("/dashboard/resume")
-                    break
-                case "RESUME_UPLOADED":
-                    router.push("/dashboard/analysis")
-                    break
-                case "ANALYSIS_READY":
-                    router.push("/dashboard/report")
-                    break
+        if (!isRouteAllowed(pathname, workflowStep, !!currentSessionId)) {
+            if (!currentSessionId) {
+                router.push("/dashboard")
+            } else {
+                switch (workflowStep) {
+                    case "START":
+                    case "GITHUB_CONNECTED":
+                        router.push("/dashboard/resume")
+                        break
+                    case "RESUME_UPLOADED":
+                        router.push("/dashboard/analysis")
+                        break
+                    case "ANALYSIS_READY":
+                        router.push("/dashboard/analysis")
+                        break
+                }
             }
         }
-    }, [user.isAuthenticated, workflowStep, pathname, router, isMounted])
+    }, [user.isAuthenticated, workflowStep, pathname, router, isMounted, currentSessionId])
 
     // Mount the DashboardThemeProvider wrapper synchronously to inject the pre-hydration FOUC script.
     // We conditionally fade the inner structure using opacity-0 to avert layout shifts and auth-flashing.

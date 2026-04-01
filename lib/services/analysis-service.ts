@@ -1,139 +1,158 @@
+import { api } from "../api-client"
 import {
-    AnalysisResult,
+    AnalysisStatusResponse,
+    GitHubProfileResponse,
     GithubData,
+    GithubRepository,
+    LoginResponse,
+    RegisterRequest,
+    ReportResponse,
     ResumeData,
-    RoadmapWeek,
-    ScoreBreakdown,
+    ResumeProfileResponse,
+    RoadmapResponse,
+    SessionResponse,
+    DashboardResponse,
 } from "../types/devprofile-types"
 
-/**
- * Simulates a network delay for the mock backend.
- */
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+// ── Auth ──
 
-export const connectGithubService = async (username: string): Promise<GithubData> => {
-    await delay(1500) // Simulating OAuth and data fetching latency
+export async function loginService(username: string, password: string): Promise<LoginResponse> {
+    return api.post<LoginResponse>("/api/auth/login", { username, password })
+}
 
-    // 20% chance to simulate a rate limit error
-    if (Math.random() < 0.2) {
-        throw new Error("GitHub API rate limit exceeded. Please try again later.")
-    }
+export async function registerService(data: RegisterRequest): Promise<string> {
+    return api.post<string>("/api/auth/register", data)
+}
+
+// ── Dashboard ──
+
+export async function fetchDashboard(): Promise<DashboardResponse> {
+    return api.get<DashboardResponse>("/api/dashboard")
+}
+
+// ── Sessions ──
+
+export async function createSession(): Promise<SessionResponse> {
+    return api.post<SessionResponse>("/api/sessions")
+}
+
+export async function fetchSessions(): Promise<SessionResponse[]> {
+    return api.get<SessionResponse[]>("/api/sessions")
+}
+
+export async function fetchSession(sessionId: number): Promise<SessionResponse> {
+    return api.get<SessionResponse>(`/api/sessions/${sessionId}`)
+}
+
+export async function startSession(sessionId: number): Promise<void> {
+    return api.post<void>(`/api/sessions/${sessionId}/start`)
+}
+
+export async function archiveSession(sessionId: number): Promise<void> {
+    return api.delete<void>(`/api/sessions/${sessionId}`)
+}
+
+// ── GitHub ──
+
+function mapGitHubResponse(data: GitHubProfileResponse): GithubData {
+    const repositories: GithubRepository[] = data.topRepositories.map((repo) => ({
+        name: repo.name,
+        description: repo.description,
+        stars: repo.stars,
+        language: repo.primaryLanguage || "Unknown",
+        updatedAt: repo.lastUpdated,
+    }))
+
+    const languages = [
+        ...new Set(
+            data.topRepositories
+                .map((r) => r.primaryLanguage)
+                .filter((l): l is string => l !== null)
+        ),
+    ]
 
     return {
         isConnected: true,
-        username,
-        repositories: [
-            {
-                id: "repo-1",
-                name: "nextjs-dashboard",
-                description: "Admin dashboard utilizing server actions and Tailwind CSS",
-                stars: 12,
-                language: "TypeScript",
-                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-            },
-            {
-                id: "repo-2",
-                name: "go-microservice",
-                description: "High-performance payment processor mock",
-                stars: 45,
-                language: "Go",
-                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15).toISOString(), // 15 days ago
-            },
-            {
-                id: "repo-3",
-                name: "react-native-app",
-                description: "Mobile e-commerce application",
-                stars: 8,
-                language: "TypeScript",
-                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString(), // 45 days ago
-            },
-            {
-                id: "repo-4",
-                name: "personal-portfolio",
-                description: "My personal website",
-                stars: 2,
-                language: "HTML",
-                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 120).toISOString(),
-            },
-        ],
-        languages: ["TypeScript", "Go", "JavaScript", "HTML", "CSS"],
+        username: data.username,
+        totalRepos: data.totalRepos,
+        totalStars: data.totalStars,
+        contributionsLastYear: data.contributionsLastYear,
+        repositories,
+        languages,
     }
 }
 
-export const uploadResumeService = async (file: File): Promise<ResumeData> => {
-    await delay(2000) // Simulating file upload and PDF parsing
+export async function connectGithubService(
+    sessionId: number,
+    username: string
+): Promise<GithubData> {
+    const data = await api.post<GitHubProfileResponse>(
+        `/api/sessions/${sessionId}/github`,
+        { username }
+    )
+    return mapGitHubResponse(data)
+}
 
-    // 20% chance to simulate a parsing error
-    if (Math.random() < 0.2) {
-        throw new Error("Failed to parse PDF structure. The file might be corrupted or in an unsupported format.")
-    }
+export async function fetchGithubProfile(sessionId: number): Promise<GithubData> {
+    const data = await api.get<GitHubProfileResponse>(
+        `/api/sessions/${sessionId}/github`
+    )
+    return mapGitHubResponse(data)
+}
 
+// ── Resume ──
+
+function mapResumeResponse(data: ResumeProfileResponse): ResumeData {
     return {
         uploaded: true,
-        filename: file.name,
-        uploadedAt: new Date().toISOString(),
-        skills: ["React", "TypeScript", "Node.js", "Docker", "PostgreSQL", "Go"],
-        warnings: [
-            "No active open-source contributions listed in the experience section.",
-            "Missing dedicated section for System Design or Cloud Architecture.",
-            "Description of past roles lacks quantifiable metrics (e.g., 'improved performance by X%').",
-        ],
+        filename: data.originalFilename,
+        fileSize: data.fileSize,
+        extractedTextPreview: data.extractedTextPreview,
+        extractedTextLength: data.extractedTextLength,
+        uploadedAt: data.uploadedAt,
     }
 }
 
-export const runAnalysisService = async (): Promise<Partial<AnalysisResult>> => {
-    // We simulate a shorter delay here because the store will manage the long running 15-second simulation via UI states.
-    // This service function represents the final payload resolution.
-    await delay(1000)
-
-    // 20% chance to simulate an LLM generation timeout or processing crash
-    if (Math.random() < 0.2) {
-        throw new Error("Analysis engine timed out while evaluating repository patterns. Please retry.")
-    }
-
-    const scoreBreakdown: ScoreBreakdown = {
-    codeQuality: 85,     // was "code"
-    complexity: 70,
-    activity: 88,
-    resume: 62,
-    techAlign: 80,       // was "tech"
+export async function uploadResumeService(
+    sessionId: number,
+    file: File
+): Promise<ResumeData> {
+    const formData = new FormData()
+    formData.append("file", file)
+    const data = await api.postForm<ResumeProfileResponse>(
+        `/api/sessions/${sessionId}/resume`,
+        formData
+    )
+    return mapResumeResponse(data)
 }
 
-    return {
-    hasRun: true,
-    status: "completed",
-    overallScore: 77,              // was "score"
-    scoreBreakdown,
-    recruiterPerspective: "Based on the aggregate data, this candidate demonstrates a solid foundation in modern frontend frameworks. They would likely pass standard technical phone screens for mid-level frontend roles.",
-    percentileRanking: "Top 24% of Candidates",
-    strengths: [ ... ],            // keep existing
-    weaknesses: [ ... ],           // keep existing
-    // REMOVE: recommendations
-    // REMOVE: detectedTechStack
-}
+export async function fetchResumeProfile(sessionId: number): Promise<ResumeData> {
+    const data = await api.get<ResumeProfileResponse>(
+        `/api/sessions/${sessionId}/resume`
+    )
+    return mapResumeResponse(data)
 }
 
-export const generateRoadmapService = async (weaknesses: string[]): Promise<RoadmapWeek[]> => {
-    await delay(1500) // Simulating AI generation time
+// ── Analysis ──
 
-    // In a real app, this would dynamically map the weaknesses to roadmap items via AI.
-    // We return a highly contextual mock based on the hardcoded weaknesses above.
-    return [
-    {
-        weekNumber: 1,
-        theme: "Testing Foundations & CI/CD",      // was "title"
-        technicalTasks: [                           // was "tasks"
-            "Set up Jest in 'nextjs-dashboard'",
-            "Write unit tests for core UI components",
-            "Add GitHub Actions pipeline to run tests on PRs"
-        ],
-        measurableOutcomes: [                       // was "outcomes"
-            "Achieve 70% test coverage",
-            "Automated pipelines ensuring code quality"
-        ],
-        technologies: ["Jest", "GitHub Actions", "React Testing Library"],
-        projectIdea: "Add a comprehensive test suite to your existing dashboard",  // was "projectIdeas: [...]"
-    },
-    // ... same pattern for weeks 2, 3, 4
-]
+export async function triggerAnalysis(sessionId: number): Promise<AnalysisStatusResponse> {
+    return api.post<AnalysisStatusResponse>(`/api/sessions/${sessionId}/analyze`)
+}
+
+export async function pollAnalysisStatus(sessionId: number): Promise<AnalysisStatusResponse> {
+    return api.get<AnalysisStatusResponse>(`/api/sessions/${sessionId}/analysis/status`)
+}
+
+// ── Report & Roadmap ──
+
+export async function fetchReport(sessionId: number): Promise<ReportResponse> {
+    return api.get<ReportResponse>(`/api/sessions/${sessionId}/report`)
+}
+
+export async function fetchRoadmap(sessionId: number): Promise<RoadmapResponse> {
+    return api.get<RoadmapResponse>(`/api/sessions/${sessionId}/roadmap`)
+}
+
+export async function markReportViewed(sessionId: number): Promise<void> {
+    return api.post<void>(`/api/sessions/${sessionId}/report/viewed`)
 }

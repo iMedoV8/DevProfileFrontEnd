@@ -1,12 +1,19 @@
 "use client"
 
+import { useEffect } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { Button } from "@/components/ui/button"
 import { Map, ArrowRight, Target, Lightbulb, Code2, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 
 export default function RoadmapPage() {
-    const { analysis, roadmap } = useDevProfileStore()
+    const { analysis, roadmap, loadRoadmap, currentSessionId } = useDevProfileStore()
+
+    useEffect(() => {
+        if (currentSessionId && analysis.hasRun && analysis.status === "completed" && !roadmap) {
+            loadRoadmap()
+        }
+    }, [currentSessionId, analysis.hasRun, analysis.status, roadmap, loadRoadmap])
 
     // --- EMPTY STATE ---
     if (!analysis.hasRun || !roadmap) {
@@ -39,17 +46,19 @@ export default function RoadmapPage() {
     }
 
     // --- POPULATED STATE ---
+    const weeks = roadmap.weeks
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div className="flex flex-col gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Improvement Roadmap</h1>
                 <p className="text-muted-foreground max-w-2xl">
-                    Based on your missing skills and structural resume weaknesses, we’ve generated this {roadmap.length}-week technical curriculum.
+                    {roadmap.summary || `Based on your evaluation, we've generated this ${roadmap.totalWeeks}-week technical curriculum.`}
                 </p>
             </div>
 
             <div className="relative border-l-2 border-border/60 ml-3 md:ml-6 flex flex-col gap-10">
-                {roadmap.map((week, index) => (
+                {weeks.map((week) => (
                     <div key={week.weekNumber} className="relative pl-8 md:pl-10">
                         {/* Timeline Node */}
                         <div className="absolute -left-[17px] top-1.5 flex size-8 items-center justify-center rounded-full border-4 border-background bg-primary text-xs font-bold text-primary-foreground shadow-sm">

@@ -5,10 +5,10 @@ import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Github, Star, GitCommit, CheckCircle2, Loader2, GitPullRequest, AlertTriangle } from "lucide-react"
+import { Github, Star, GitCommit, CheckCircle2, Loader2, AlertTriangle, FolderGit2 } from "lucide-react"
 
 export default function GithubConnectionPage() {
-    const { github, connectGithub } = useDevProfileStore()
+    const { github, connectGithub, currentSessionId } = useDevProfileStore()
     const { toast } = useToast()
     const [isConnecting, setIsConnecting] = useState(false)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -17,6 +17,10 @@ export default function GithubConnectionPage() {
     const handleConnect = async () => {
         if (!usernameInput.trim()) {
             toast({ variant: "destructive", title: "Error", description: "Please enter a GitHub username" })
+            return
+        }
+        if (!currentSessionId) {
+            toast({ variant: "destructive", title: "Error", description: "No active session. Please create one from the dashboard." })
             return
         }
         setIsConnecting(true)
@@ -135,21 +139,28 @@ export default function GithubConnectionPage() {
                     </div>
                 </div>
 
-                {/* Mock Activity Stats */}
-                <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+                {/* Real Stats from Backend */}
+                <div className="col-span-1 md:col-span-2 grid grid-cols-3 gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-muted-foreground">
-                            <GitCommit className="size-4" />
-                            <span className="text-sm font-medium">Contributions (Year)</span>
+                            <FolderGit2 className="size-4" />
+                            <span className="text-sm font-medium">Repositories</span>
                         </div>
-                        <span className="text-3xl font-bold tracking-tight text-foreground">1,248</span>
+                        <span className="text-3xl font-bold tracking-tight text-foreground">{github.totalRepos}</span>
                     </div>
                     <div className="flex flex-col gap-1 border-l border-border pl-4">
                         <div className="flex items-center gap-2 text-muted-foreground">
-                            <GitPullRequest className="size-4" />
-                            <span className="text-sm font-medium">Pull Requests</span>
+                            <Star className="size-4" />
+                            <span className="text-sm font-medium">Total Stars</span>
                         </div>
-                        <span className="text-3xl font-bold tracking-tight text-foreground">42</span>
+                        <span className="text-3xl font-bold tracking-tight text-foreground">{github.totalStars}</span>
+                    </div>
+                    <div className="flex flex-col gap-1 border-l border-border pl-4">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <GitCommit className="size-4" />
+                            <span className="text-sm font-medium">Contributions</span>
+                        </div>
+                        <span className="text-3xl font-bold tracking-tight text-foreground">{github.contributionsLastYear}</span>
                     </div>
                 </div>
             </div>
@@ -158,7 +169,7 @@ export default function GithubConnectionPage() {
                 <h3 className="text-lg font-semibold tracking-tight">Analyzed Repositories</h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                     {github.repositories.map((repo) => (
-                        <div key={repo.id} className="flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-border/80">
+                        <div key={repo.name} className="flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-border/80">
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <h4 className="font-semibold text-primary">{repo.name}</h4>

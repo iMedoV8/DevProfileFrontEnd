@@ -4,11 +4,17 @@ import { useState, useRef } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { FileText, UploadCloud, CheckCircle2, Loader2, AlertTriangle, ShieldCheck } from "lucide-react"
+import { FileText, UploadCloud, Loader2, AlertTriangle, ShieldCheck, HardDrive, Type } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default function ResumeUploadPage() {
-    const { resume, uploadResume } = useDevProfileStore()
+    const { resume, uploadResume, currentSessionId } = useDevProfileStore()
     const { toast } = useToast()
     const [isUploading, setIsUploading] = useState(false)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -42,12 +48,20 @@ export default function ResumeUploadPage() {
     }
 
     const processFile = async (file: File) => {
-        // Front-end validation
         if (file.type !== "application/pdf") {
             toast({
                 variant: "destructive",
                 title: "Invalid File Type",
-                description: "Only PDF files are currently supported for accuracy.",
+                description: "Only PDF files are currently supported.",
+            })
+            return
+        }
+
+        if (!currentSessionId) {
+            toast({
+                variant: "destructive",
+                title: "No Active Session",
+                description: "Please create a session from the dashboard first.",
             })
             return
         }
@@ -58,7 +72,7 @@ export default function ResumeUploadPage() {
             await uploadResume(file)
             toast({
                 title: "Resume Uploaded",
-                description: "Your structural markers have been successfully extracted.",
+                description: "Your resume has been successfully parsed.",
             })
         } catch (error: any) {
             const message = error.message || "An unexpected error occurred."
@@ -80,7 +94,7 @@ export default function ResumeUploadPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Upload Resume</h1>
                     <p className="mt-2 text-muted-foreground">
-                        Provide your latest CV. Our AI will extract your structural markers and compare them against ATS best practices.
+                        Provide your latest CV. Our AI will use it alongside your GitHub data to generate a comprehensive evaluation.
                     </p>
                 </div>
 
@@ -159,9 +173,9 @@ export default function ResumeUploadPage() {
         <div className="flex flex-col gap-8">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Resume Parsing Results</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Resume Uploaded</h1>
                     <p className="mt-2 text-muted-foreground">
-                        Successfully extracted data from <span className="font-semibold text-foreground">{resume.filename}</span>.
+                        Successfully parsed <span className="font-semibold text-foreground">{resume.filename}</span>.
                     </p>
                 </div>
                 <div className="flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-600 dark:text-green-400 border border-green-500/20">
@@ -171,41 +185,57 @@ export default function ResumeUploadPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Mock Extracted Skills */}
+                {/* File Info */}
                 <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <h3 className="text-sm font-semibold tracking-tight text-muted-foreground uppercase flex items-center gap-2">
-                        <CheckCircle2 className="size-4 text-green-500" />
-                        Extracted Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {resume.skills.map((skill) => (
-                            <span key={skill} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground border border-border">
-                                {skill}
-                            </span>
-                        ))}
-                    </div>
-                    {resume.skills.length === 0 && (
-                        <p className="text-sm text-muted-foreground italic">No skills definitively extracted.</p>
-                    )}
-                </div>
-
-                {/* Mock ATS Warnings */}
-                <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h3 className="text-sm font-semibold tracking-tight text-amber-500 uppercase flex items-center gap-2">
-                        <AlertTriangle className="size-4" />
-                        ATS Structural Warnings
+                        <FileText className="size-4 text-primary" />
+                        File Details
                     </h3>
                     <div className="flex flex-col gap-3 mt-2">
-                        {resume.warnings.map((warning, index) => (
-                            <div key={index} className="flex items-start gap-3 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                <span className="shrink-0 mt-0.5">•</span>
-                                <span>{warning}</span>
+                        <div className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
+                            <span className="text-sm font-medium text-muted-foreground">Filename</span>
+                            <span className="text-sm font-semibold text-foreground">{resume.filename}</span>
+                        </div>
+                        {resume.fileSize !== null && (
+                            <div className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <HardDrive className="size-3.5" />
+                                    <span className="text-sm font-medium">File Size</span>
+                                </div>
+                                <span className="text-sm font-semibold text-foreground">{formatFileSize(resume.fileSize)}</span>
                             </div>
-                        ))}
+                        )}
+                        {resume.extractedTextLength !== null && (
+                            <div className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Type className="size-3.5" />
+                                    <span className="text-sm font-medium">Text Extracted</span>
+                                </div>
+                                <span className="text-sm font-semibold text-foreground">{resume.extractedTextLength.toLocaleString()} characters</span>
+                            </div>
+                        )}
+                        {resume.uploadedAt && (
+                            <div className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
+                                <span className="text-sm font-medium text-muted-foreground">Uploaded</span>
+                                <span className="text-sm font-semibold text-foreground">
+                                    {new Date(resume.uploadedAt).toLocaleDateString()}
+                                </span>
+                            </div>
+                        )}
                     </div>
-                    {resume.warnings.length === 0 && (
-                        <p className="text-sm text-muted-foreground italic">No structural warnings found.</p>
-                    )}
+                </div>
+
+                {/* Text Preview */}
+                <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <h3 className="text-sm font-semibold tracking-tight text-muted-foreground uppercase flex items-center gap-2">
+                        <Type className="size-4 text-primary" />
+                        Extracted Text Preview
+                    </h3>
+                    <div className="mt-2 rounded-lg bg-secondary/30 p-4 max-h-64 overflow-y-auto">
+                        <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">
+                            {resume.extractedTextPreview || "No text extracted."}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

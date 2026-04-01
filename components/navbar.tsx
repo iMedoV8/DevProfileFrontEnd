@@ -63,7 +63,6 @@ const navLinks = [
 
 const dashboardLinks = [
   { label: "Workspace", href: "/dashboard" },
-  { label: "Blog", href: "/blog" },
 ]
 
 export function Navbar() {
@@ -413,14 +412,6 @@ export function Navbar() {
                 >
                   <SettingsIcon className="size-4" />
                   Settings
-                </Link>
-
-                <Link
-                  href="/blog"
-                  className="flex items-center gap-2 block rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <FileText className="size-4" />
-                  Blog
                 </Link>
 
                 <div className="my-2 h-px w-full bg-border/50" />
