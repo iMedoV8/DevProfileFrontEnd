@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { formatDistanceToNow } from "date-fns"
@@ -8,6 +8,7 @@ import { OnboardingChecklist } from "@/components/dashboard/features/onboarding-
 import { ProfileCard } from "@/components/dashboard/widgets/profile-card"
 import { ScoreWidget } from "@/components/dashboard/widgets/score-widget"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Github, FileText, Activity, Target, Plus, Clock, CheckCircle2, AlertTriangle, Loader2, Archive } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -18,6 +19,9 @@ export default function DashboardOverviewPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
     const [isSelecting, setIsSelecting] = useState<number | null>(null)
+    const [showNameDialog, setShowNameDialog] = useState(false)
+    const [sessionName, setSessionName] = useState("")
+    const nameInputRef = useRef<HTMLInputElement>(null)
 
     const hour = new Date().getHours()
     const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
@@ -29,15 +33,25 @@ export default function DashboardOverviewPage() {
         }
     }, [user.isAuthenticated, loadSessions])
 
+    const handleOpenNameDialog = () => {
+        setSessionName("")
+        setShowNameDialog(true)
+        setTimeout(() => nameInputRef.current?.focus(), 50)
+    }
+
     const handleCreateSession = async () => {
+        const name = sessionName.trim()
+        if (!name) return
         setIsCreating(true)
+        setShowNameDialog(false)
         try {
-            await createNewSession()
+            await createNewSession(name)
             toast({ title: "New Analysis Created", description: "You can now connect your GitHub and upload your resume." })
         } catch (err: any) {
             toast({ variant: "destructive", title: "Error", description: err?.message || "Failed to create session." })
         } finally {
             setIsCreating(false)
+            setSessionName("")
         }
     }
 
@@ -135,7 +149,7 @@ export default function DashboardOverviewPage() {
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold tracking-tight">Your Analysis Sessions</h2>
                     <Button
-                        onClick={handleCreateSession}
+                        onClick={handleOpenNameDialog}
                         disabled={isCreating}
                         className="flex items-center gap-2 rounded-xl h-10 px-5 shadow-sm"
                     >
@@ -143,6 +157,31 @@ export default function DashboardOverviewPage() {
                         New Analysis
                     </Button>
                 </div>
+
+                {/* Session Name Dialog */}
+                {showNameDialog && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNameDialog(false)}>
+                        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                            <h3 className="text-lg font-semibold tracking-tight text-foreground mb-1">Name Your Analysis</h3>
+                            <p className="text-sm text-muted-foreground mb-4">Give this session a descriptive name so you can identify it later.</p>
+                            <Input
+                                ref={nameInputRef}
+                                value={sessionName}
+                                onChange={(e) => setSessionName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleCreateSession() }}
+                                placeholder="e.g. Spring 2026 Evaluation"
+                                maxLength={100}
+                                className="mb-4"
+                            />
+                            <div className="flex justify-end gap-3">
+                                <Button variant="outline" onClick={() => setShowNameDialog(false)} className="rounded-xl">Cancel</Button>
+                                <Button onClick={handleCreateSession} disabled={!sessionName.trim()} className="rounded-xl">
+                                    Create Session
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-12 rounded-2xl border border-border bg-card">
@@ -158,7 +197,7 @@ export default function DashboardOverviewPage() {
                             Create your first analysis session to start evaluating your developer profile.
                         </p>
                         <Button
-                            onClick={handleCreateSession}
+                            onClick={handleOpenNameDialog}
                             disabled={isCreating}
                             className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm"
                         >
@@ -194,7 +233,7 @@ export default function DashboardOverviewPage() {
                                         )}
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-sm font-semibold text-foreground">
-                                                Session #{session.id}
+                                                {session.name}
                                                 {isSelected && (
                                                     <span className="ml-2 text-xs font-medium text-primary">(Active)</span>
                                                 )}

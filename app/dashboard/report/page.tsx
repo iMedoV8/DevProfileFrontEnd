@@ -48,6 +48,13 @@ export default function ReportPage() {
     // --- POPULATED STATE ---
     const { overallScore, scoreBreakdown, strengths, weaknesses, recruiterPerspective, percentileRanking, generatedAt } = analysis
 
+    const scoreColor = (score: number | null | undefined) => {
+        if (score == null) return "text-muted-foreground"
+        if (score >= 70) return "text-green-500"
+        if (score >= 50) return "text-yellow-500"
+        return "text-red-500"
+    }
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -87,7 +94,7 @@ export default function ReportPage() {
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Overall Hireability</h3>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-6xl font-black tracking-tighter text-foreground">{overallScore}</span>
+                        <span className={`text-6xl font-black tracking-tighter ${scoreColor(overallScore)}`}>{overallScore}</span>
                         <span className="text-lg font-bold text-muted-foreground">/100</span>
                     </div>
                     {percentileRanking && (
@@ -111,7 +118,7 @@ export default function ReportPage() {
                     ].map((item) => (
                         <div key={item.label} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm">
                             <item.icon className="size-5 text-muted-foreground mb-3" />
-                            <span className="text-2xl font-bold">{item.score ?? "—"}</span>
+                            <span className={`text-2xl font-bold ${scoreColor(item.score)}`}>{item.score ?? "—"}</span>
                             <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 text-center">{item.label}</span>
                         </div>
                     ))}
@@ -128,7 +135,7 @@ export default function ReportPage() {
                     <ul className="flex flex-col gap-3 mt-2">
                         {strengths.map((str, i) => (
                             <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                                <span className="shrink-0 mt-0.5 size-1.5 rounded-full bg-green-500" />
+                                <span className="shrink-0 mt-[7px] size-1.5 rounded-full bg-green-500" />
                                 <span>{str}</span>
                             </li>
                         ))}
@@ -144,7 +151,7 @@ export default function ReportPage() {
                     <ul className="flex flex-col gap-3 mt-2">
                         {weaknesses.map((wk, i) => (
                             <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                                <span className="shrink-0 mt-0.5 size-1.5 rounded-full bg-red-500" />
+                                <span className="shrink-0 mt-[7px] size-1.5 rounded-full bg-red-500" />
                                 <span>{wk}</span>
                             </li>
                         ))}

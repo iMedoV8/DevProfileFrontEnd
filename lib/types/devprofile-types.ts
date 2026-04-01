@@ -24,12 +24,16 @@ export interface LoginResponse {
     token: string
     username: string
     role: string
+    techField: string | null
+    careerGoal: string | null
 }
 
 export interface RegisterRequest {
     username: string
     email: string
     password: string
+    techField: string
+    careerGoal: string
 }
 
 // ── User ──
@@ -38,16 +42,21 @@ export interface UserProfile {
     name: string
     email: string
     isAuthenticated: boolean
+    techField: string | null
+    careerGoal: string | null
 }
 
 // ── Session (backend AnalysisSessionResponse) ──
 
 export interface SessionResponse {
     id: number
+    name: string
     status: "CREATED" | "IN_PROGRESS" | "COMPLETED" | "FAILED"
     workflowStep: string | null
     hireabilityScore: number | null
     archived: boolean
+    techField: string | null
+    careerGoal: string | null
     createdAt: string
     updatedAt: string
     reportViewedAt: string | null

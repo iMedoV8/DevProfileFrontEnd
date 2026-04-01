@@ -4,7 +4,8 @@ import { useState, useRef } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { FileText, UploadCloud, Loader2, AlertTriangle, ShieldCheck, HardDrive, Type } from "lucide-react"
+import { FileText, UploadCloud, Loader2, AlertTriangle, ShieldCheck, HardDrive, Type, ArrowRight } from "lucide-react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 function formatFileSize(bytes: number): string {
@@ -237,6 +238,17 @@ export default function ResumeUploadPage() {
                         </p>
                     </div>
                 </div>
+            </div>
+
+            {/* Next Step CTA */}
+            <div className="mt-4">
+                <Link
+                    href="/dashboard/analysis"
+                    className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl active:scale-95"
+                >
+                    Continue to Analysis
+                    <ArrowRight className="size-5" />
+                </Link>
             </div>
         </div>
     )

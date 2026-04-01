@@ -32,8 +32,8 @@ export async function fetchDashboard(): Promise<DashboardResponse> {
 
 // ── Sessions ──
 
-export async function createSession(): Promise<SessionResponse> {
-    return api.post<SessionResponse>("/api/sessions")
+export async function createSession(name: string): Promise<SessionResponse> {
+    return api.post<SessionResponse>("/api/sessions", { name })
 }
 
 export async function fetchSessions(): Promise<SessionResponse[]> {
@@ -50,6 +50,12 @@ export async function startSession(sessionId: number): Promise<void> {
 
 export async function archiveSession(sessionId: number): Promise<void> {
     return api.delete<void>(`/api/sessions/${sessionId}`)
+}
+
+// ── User Profile ──
+
+export async function updateUserProfile(techField: string, careerGoal: string): Promise<void> {
+    return api.put<void>("/api/user/profile", { techField, careerGoal })
 }
 
 // ── GitHub ──

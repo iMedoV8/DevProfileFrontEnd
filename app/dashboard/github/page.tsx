@@ -5,7 +5,8 @@ import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Github, Star, GitCommit, CheckCircle2, Loader2, AlertTriangle, FolderGit2 } from "lucide-react"
+import { Github, Star, GitCommit, CheckCircle2, Loader2, AlertTriangle, FolderGit2, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export default function GithubConnectionPage() {
     const { github, connectGithub, currentSessionId } = useDevProfileStore()
@@ -192,6 +193,17 @@ export default function GithubConnectionPage() {
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* Next Step CTA */}
+            <div className="mt-4">
+                <Link
+                    href="/dashboard/resume"
+                    className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl active:scale-95"
+                >
+                    Continue to Resume Upload
+                    <ArrowRight className="size-5" />
+                </Link>
             </div>
         </div>
     )

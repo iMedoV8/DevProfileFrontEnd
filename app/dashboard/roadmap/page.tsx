@@ -77,7 +77,7 @@ export default function RoadmapPage() {
                                         <Target className="size-4" /> Technical Tasks
                                     </h3>
                                     <ul className="flex flex-col gap-2">
-                                        {week.technicalTasks.map((task, i) => (
+                                        {(week.technicalTasks || []).map((task, i) => (
                                             <li key={i} className="flex items-start gap-2.5 text-sm">
                                                 <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" />
                                                 <span className="text-foreground/90">{task}</span>
@@ -92,7 +92,7 @@ export default function RoadmapPage() {
                                         <CheckCircle2 className="size-4 text-green-500" /> Measurable Outcomes
                                     </h3>
                                     <ul className="flex flex-col gap-2">
-                                        {week.measurableOutcomes.map((outcome, i) => (
+                                        {(week.measurableOutcomes || []).map((outcome, i) => (
                                             <li key={i} className="flex items-start gap-2.5 text-sm">
                                                 <span className="mt-1 size-1.5 shrink-0 rounded-full bg-green-500/70" />
                                                 <span className="text-muted-foreground">{outcome}</span>
@@ -104,7 +104,7 @@ export default function RoadmapPage() {
 
                             {/* Badges Footer */}
                             <div className="mt-2 flex flex-wrap gap-2 pt-4 border-t border-border/50">
-                                {week.technologies.length > 0 && (
+                                {week.technologies && week.technologies.length > 0 && (
                                     <div className="flex items-center gap-2 mr-4">
                                         <Code2 className="size-4 text-muted-foreground" />
                                         {week.technologies.map((tech) => (

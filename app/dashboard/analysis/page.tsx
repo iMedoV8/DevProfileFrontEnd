@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState, useRef } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -7,6 +8,18 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Activity, Play, CheckCircle2, ArrowRight, Cpu, AlertTriangle, Loader2 } from "lucide-react"
 import Link from "next/link"
+
+const MESSAGES = [
+    "Fetching repository metadata from GitHub...",
+    "Analyzing code structure and patterns...",
+    "Running complexity metrics on repositories...",
+    "Parsing commit history and frequency...",
+    "Evaluating resume structure and content...",
+    "Aggregating scores against hiring benchmarks...",
+    "Generating personalized feedback...",
+    "Building your improvement roadmap...",
+    "Finalizing your hireability report...",
+]
 
 export default function AnalysisPage() {
     const { analysis, startAnalysis, createNewSession, currentSessionId } = useDevProfileStore()
@@ -61,49 +74,16 @@ export default function AnalysisPage() {
         )
     }
 
-    // --- PROCESSING STATE (Real polling) ---
+    // --- PROCESSING STATE (Smooth animated progress) ---
     if (analysis.status === "processing") {
-        return (
-            <div className="flex flex-col gap-6 max-w-2xl mx-auto mt-10">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Analyzing Profile</h1>
-                    <p className="mt-2 text-muted-foreground">
-                        Evaluating your developer profile with AI...
-                    </p>
-                </div>
-
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-border py-16 px-6 text-center bg-card shadow-sm mt-4">
-                    {/* Decorative spinning elements */}
-                    <div className="relative flex items-center justify-center mb-10">
-                        <div className="absolute size-32 animate-[spin_4s_linear_infinite] rounded-full border border-dashed border-primary/40" />
-                        <div className="absolute size-24 animate-[spin_3s_linear_infinite_reverse] rounded-full border border-dashed border-primary/60" />
-                        <div className="flex size-16 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/50 relative">
-                            <Cpu className="size-6 animate-pulse" />
-                        </div>
-                    </div>
-
-                    <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
-                        {analysis.progressPercent}% Complete
-                    </h2>
-
-                    <Progress value={analysis.progressPercent} className="h-3 w-full max-w-sm mb-6" />
-
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="size-2 rounded-full bg-primary animate-ping" />
-                        <p className="text-sm font-medium text-muted-foreground w-64 text-left">
-                            {analysis.progressMessage || "Processing..."}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )
+        return <AnalysisProcessing targetPercent={analysis.progressPercent} />
     }
 
     // --- FAILED STATE ---
     if (analysis.status === "failed") {
         const handleRetryWithNewSession = async () => {
             try {
-                await createNewSession()
+                await createNewSession("Retry - " + new Date().toLocaleDateString())
                 toast({
                     title: "New Session Created",
                     description: "Please connect GitHub and upload your resume again, then re-run the analysis.",
@@ -168,6 +148,80 @@ export default function AnalysisPage() {
                     View Full Report
                     <ArrowRight className="size-5" />
                 </Link>
+            </div>
+        </div>
+    )
+}
+
+// Separate component so hooks (useEffect/useState) run only during processing
+function AnalysisProcessing({ targetPercent }: { targetPercent: number }) {
+    const [displayPercent, setDisplayPercent] = useState(0)
+    const [messageIndex, setMessageIndex] = useState(0)
+    const targetRef = useRef(targetPercent)
+    targetRef.current = targetPercent
+
+    // Smooth progress animation — increments ~1% every 300ms toward the target,
+    // and also drifts slowly upward between polls so it never feels stuck
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setDisplayPercent((prev) => {
+                const target = targetRef.current
+                // If target is ahead, move toward it smoothly
+                if (prev < target) {
+                    return Math.min(prev + 1.5, target)
+                }
+                // Between polls, drift slowly (max 95% before real completion)
+                if (prev < 95) {
+                    return prev + 0.3
+                }
+                return prev
+            })
+        }, 300)
+
+        return () => clearInterval(interval)
+    }, [])
+
+    // Rotate messages based on displayed progress
+    useEffect(() => {
+        const idx = Math.min(
+            Math.floor((displayPercent / 100) * MESSAGES.length),
+            MESSAGES.length - 1
+        )
+        setMessageIndex(idx)
+    }, [displayPercent])
+
+    const rounded = Math.floor(displayPercent)
+
+    return (
+        <div className="flex flex-col gap-6 max-w-2xl mx-auto mt-10">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Analyzing Profile</h1>
+                <p className="mt-2 text-muted-foreground">
+                    Evaluating your developer profile with AI...
+                </p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-border py-16 px-6 text-center bg-card shadow-sm mt-4">
+                <div className="relative flex items-center justify-center mb-10">
+                    <div className="absolute size-32 animate-[spin_4s_linear_infinite] rounded-full border border-dashed border-primary/40" />
+                    <div className="absolute size-24 animate-[spin_3s_linear_infinite_reverse] rounded-full border border-dashed border-primary/60" />
+                    <div className="flex size-16 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/50 relative">
+                        <Cpu className="size-6 animate-pulse" />
+                    </div>
+                </div>
+
+                <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
+                    {rounded}% Complete
+                </h2>
+
+                <Progress value={displayPercent} className="h-3 w-full max-w-sm mb-6" />
+
+                <div className="flex items-center justify-center gap-3">
+                    <div className="size-2 rounded-full bg-primary animate-ping" />
+                    <p className="text-sm font-medium text-muted-foreground w-64 text-left">
+                        {MESSAGES[messageIndex]}
+                    </p>
+                </div>
             </div>
         </div>
     )

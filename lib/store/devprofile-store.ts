@@ -26,6 +26,7 @@ import {
     fetchResumeProfile,
     loginService,
     registerService,
+    updateUserProfile,
 } from "../services/analysis-service"
 
 // ── Derive frontend workflow step from backend session state ──
@@ -71,14 +72,15 @@ interface DevProfileState {
 
     // Auth Actions
     login: (username: string, password: string) => Promise<void>
-    register: (username: string, email: string, password: string) => Promise<void>
+    register: (username: string, email: string, password: string, techField: string, careerGoal: string) => Promise<void>
     logout: () => void
     resetAccount: () => void
+    updateProfile: (techField: string, careerGoal: string) => Promise<void>
 
     // Session Actions
     loadSessions: () => Promise<void>
     selectSession: (sessionId: number) => Promise<void>
-    createNewSession: () => Promise<void>
+    createNewSession: (name: string) => Promise<void>
     archiveCurrentSession: () => Promise<void>
 
     // Pipeline Actions
@@ -97,6 +99,8 @@ const initialState = {
         name: "",
         email: "",
         isAuthenticated: false,
+        techField: null,
+        careerGoal: null,
     },
     github: {
         isConnected: false,
@@ -149,12 +153,14 @@ export const useDevProfileStore = create<DevProfileState>()(
                         name: response.username,
                         email: "",
                         isAuthenticated: true,
+                        techField: response.techField,
+                        careerGoal: response.careerGoal,
                     },
                 })
             },
 
-            register: async (username, email, password) => {
-                await registerService({ username, email, password })
+            register: async (username, email, password, techField, careerGoal) => {
+                await registerService({ username, email, password, techField, careerGoal })
             },
 
             logout: () => {
@@ -167,6 +173,13 @@ export const useDevProfileStore = create<DevProfileState>()(
                     ...initialState,
                     user: state.user,
                 })),
+
+            updateProfile: async (techField, careerGoal) => {
+                await updateUserProfile(techField, careerGoal)
+                set((state) => ({
+                    user: { ...state.user, techField, careerGoal },
+                }))
+            },
 
             // ── Sessions ──
 
@@ -260,8 +273,8 @@ export const useDevProfileStore = create<DevProfileState>()(
                 })
             },
 
-            createNewSession: async () => {
-                const session = await createSession()
+            createNewSession: async (name: string) => {
+                const session = await createSession(name)
                 await startSession(session.id)
                 set((state) => ({
                     currentSessionId: session.id,

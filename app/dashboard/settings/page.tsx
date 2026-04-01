@@ -1,10 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { useTheme } from "next-themes"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Moon,
     Sun,
@@ -14,19 +23,50 @@ import {
     RefreshCw,
     Settings as SettingsIcon,
     Archive,
+    User,
+    Save,
 } from "lucide-react"
+
+const TECH_FIELD_OPTIONS: Record<string, string> = {
+    FRONTEND: "Frontend Development",
+    BACKEND: "Backend Development",
+    FULLSTACK: "Full-Stack Development",
+    DEVOPS: "DevOps / Infrastructure",
+    MOBILE: "Mobile Development",
+    DATA_SCIENCE: "Data Science",
+    MACHINE_LEARNING: "Machine Learning / AI",
+    CYBERSECURITY: "Cybersecurity",
+    CLOUD_ENGINEERING: "Cloud Engineering",
+    GAME_DEVELOPMENT: "Game Development",
+    EMBEDDED_SYSTEMS: "Embedded Systems",
+    QA_TESTING: "QA / Testing",
+}
+
+const CAREER_GOAL_OPTIONS: Record<string, string> = {
+    INTERNSHIP: "Internship",
+    JUNIOR_POSITION: "Junior Position",
+    MID_LEVEL_POSITION: "Mid-Level Position",
+    SENIOR_POSITION: "Senior Position",
+    FREELANCING: "Freelancing",
+    STARTUP_FOUNDER: "Startup Founder",
+    CAREER_SWITCH: "Career Switch",
+    UPSKILLING: "Upskilling",
+}
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme()
     const router = useRouter()
     const { toast } = useToast()
-    const { logout, analysis, currentSessionId, archiveCurrentSession, createNewSession } = useDevProfileStore()
+    const { logout, analysis, user, currentSessionId, archiveCurrentSession, createNewSession, updateProfile } = useDevProfileStore()
+    const [techField, setTechField] = useState(user.techField || "")
+    const [careerGoal, setCareerGoal] = useState(user.careerGoal || "")
+    const [isSaving, setIsSaving] = useState(false)
 
     const isProcessing = analysis.status === "processing"
 
     const handleReRunAnalysis = async () => {
         try {
-            await createNewSession()
+            await createNewSession("New Analysis - " + new Date().toLocaleDateString())
             toast({ title: "New Session Created", description: "You can now re-run the analysis with fresh data." })
             router.push("/dashboard")
         } catch (err: any) {
@@ -101,6 +141,68 @@ export default function SettingsPage() {
                         >
                             <Monitor className="size-4" />
                             System
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Developer Profile */}
+                <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <div className="flex items-center gap-2 text-lg font-semibold tracking-tight mb-2">
+                        <User className="size-5 text-primary" />
+                        Developer Profile
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                        Your tech field and career goal personalize the AI analysis. New sessions will use these defaults.
+                    </p>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="settings-techField">Tech Field</Label>
+                            <Select value={techField} onValueChange={setTechField} disabled={isSaving}>
+                                <SelectTrigger id="settings-techField">
+                                    <SelectValue placeholder="Select your tech field" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(TECH_FIELD_OPTIONS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="settings-careerGoal">Career Goal</Label>
+                            <Select value={careerGoal} onValueChange={setCareerGoal} disabled={isSaving}>
+                                <SelectTrigger id="settings-careerGoal">
+                                    <SelectValue placeholder="Select your career goal" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(CAREER_GOAL_OPTIONS).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end mt-2">
+                        <Button
+                            disabled={isSaving || !techField || !careerGoal || (techField === user.techField && careerGoal === user.careerGoal)}
+                            onClick={async () => {
+                                setIsSaving(true)
+                                try {
+                                    await updateProfile(techField, careerGoal)
+                                    toast({ title: "Profile Updated", description: "Your tech field and career goal have been saved." })
+                                } catch (err: any) {
+                                    toast({ variant: "destructive", title: "Error", description: err?.message || "Failed to update profile." })
+                                } finally {
+                                    setIsSaving(false)
+                                }
+                            }}
+                            className="flex items-center gap-2 rounded-xl"
+                        >
+                            <Save className="size-4" />
+                            {isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                     </div>
                 </div>

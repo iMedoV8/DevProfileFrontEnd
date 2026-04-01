@@ -11,11 +11,44 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import type { ApiError } from "@/lib/api-client"
+
+const TECH_FIELD_OPTIONS: Record<string, string> = {
+    FRONTEND: "Frontend Development",
+    BACKEND: "Backend Development",
+    FULLSTACK: "Full-Stack Development",
+    DEVOPS: "DevOps / Infrastructure",
+    MOBILE: "Mobile Development",
+    DATA_SCIENCE: "Data Science",
+    MACHINE_LEARNING: "Machine Learning / AI",
+    CYBERSECURITY: "Cybersecurity",
+    CLOUD_ENGINEERING: "Cloud Engineering",
+    GAME_DEVELOPMENT: "Game Development",
+    EMBEDDED_SYSTEMS: "Embedded Systems",
+    QA_TESTING: "QA / Testing",
+}
+
+const CAREER_GOAL_OPTIONS: Record<string, string> = {
+    INTERNSHIP: "Internship",
+    JUNIOR_POSITION: "Junior Position",
+    MID_LEVEL_POSITION: "Mid-Level Position",
+    SENIOR_POSITION: "Senior Position",
+    FREELANCING: "Freelancing",
+    STARTUP_FOUNDER: "Startup Founder",
+    CAREER_SWITCH: "Career Switch",
+    UPSKILLING: "Upskilling",
+}
 
 interface AuthModalProps {
     open: boolean
@@ -35,6 +68,8 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [techField, setTechField] = useState("")
+    const [careerGoal, setCareerGoal] = useState("")
     const [error, setError] = useState<string | null>(null)
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
@@ -42,6 +77,8 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         setUsername("")
         setEmail("")
         setPassword("")
+        setTechField("")
+        setCareerGoal("")
         setError(null)
         setFieldErrors({})
     }
@@ -59,7 +96,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
         try {
             if (mode === "register") {
-                await register(username, email, password)
+                await register(username, email, password, techField, careerGoal)
                 toast({
                     title: "Account created",
                     description: "You can now sign in with your credentials.",
@@ -149,6 +186,44 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                             <p className="text-xs text-destructive">{fieldErrors.password}</p>
                         )}
                     </div>
+
+                    {mode === "register" && (
+                        <>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="techField">Tech Field</Label>
+                                <Select value={techField} onValueChange={setTechField} disabled={isLoading}>
+                                    <SelectTrigger id="techField">
+                                        <SelectValue placeholder="Select your tech field" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(TECH_FIELD_OPTIONS).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {fieldErrors.techField && (
+                                    <p className="text-xs text-destructive">{fieldErrors.techField}</p>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="careerGoal">Career Goal</Label>
+                                <Select value={careerGoal} onValueChange={setCareerGoal} disabled={isLoading}>
+                                    <SelectTrigger id="careerGoal">
+                                        <SelectValue placeholder="Select your career goal" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(CAREER_GOAL_OPTIONS).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {fieldErrors.careerGoal && (
+                                    <p className="text-xs text-destructive">{fieldErrors.careerGoal}</p>
+                                )}
+                            </div>
+                        </>
+                    )}
 
                     {error && (
                         <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
