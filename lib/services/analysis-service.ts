@@ -12,6 +12,7 @@ import {
     RoadmapResponse,
     SessionResponse,
     DashboardResponse,
+    DevProfileResponse,
 } from "../types/devprofile-types"
 
 // ── Auth ──
@@ -161,4 +162,10 @@ export async function fetchRoadmap(sessionId: number): Promise<RoadmapResponse> 
 
 export async function markReportViewed(sessionId: number): Promise<void> {
     return api.post<void>(`/api/sessions/${sessionId}/report/viewed`)
+}
+
+// ── Dev Profile (RPG Gamification) ──
+
+export async function fetchDevProfile(): Promise<DevProfileResponse> {
+    return api.get<DevProfileResponse>("/api/profile")
 }

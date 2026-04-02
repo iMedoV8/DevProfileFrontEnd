@@ -151,7 +151,7 @@ export const useDevProfileStore = create<DevProfileState>()(
                 set({
                     user: {
                         name: response.username,
-                        email: "",
+                        email: response.email || "",
                         isAuthenticated: true,
                         techField: response.techField,
                         careerGoal: response.careerGoal,

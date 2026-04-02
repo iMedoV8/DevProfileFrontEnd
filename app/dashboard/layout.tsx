@@ -13,7 +13,8 @@ function isRouteAllowed(pathname: string, workflowStep: WorkflowStep, hasSession
     // Always allowed
     if (
         pathname === "/dashboard" ||
-        pathname === "/dashboard/settings"
+        pathname === "/dashboard/settings" ||
+        pathname === "/dashboard/profile"
     ) {
         return true
     }

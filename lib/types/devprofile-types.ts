@@ -23,6 +23,7 @@ export interface LoginRequest {
 export interface LoginResponse {
     token: string
     username: string
+    email: string
     role: string
     techField: string | null
     careerGoal: string | null
@@ -197,4 +198,42 @@ export interface RoadmapResponse {
     totalWeeks: number
     weeks: RoadmapWeek[]
     generatedAt: string
+}
+
+// ── Dev Profile (RPG Gamification) ──
+
+export interface SkillStats {
+    codeQuality: number
+    complexity: number
+    activity: number
+    resume: number
+    techAlignment: number
+}
+
+export interface Archetype {
+    name: string
+    description: string
+}
+
+export interface Achievement {
+    id: string
+    name: string
+    description: string
+    icon: string
+    unlocked: boolean
+}
+
+export interface DevProfileResponse {
+    username: string
+    email: string
+    techField: string | null
+    careerGoal: string | null
+    level: string
+    hireabilityScore: number
+    levelProgress: number
+    stats: SkillStats | null
+    archetype: Archetype | null
+    achievements: Achievement[]
+    totalSessions: number
+    completedSessions: number
 }

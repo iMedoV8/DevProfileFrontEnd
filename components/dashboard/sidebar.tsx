@@ -14,6 +14,7 @@ import {
     Settings,
     Lock,
     CheckCircle2,
+    Swords,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -82,6 +83,13 @@ export function Sidebar() {
             icon: Map,
             isLocked: !isReportUnlocked,
             isCompleted: isReportCompleted,
+        },
+        {
+            title: "Dev Profile",
+            href: "/dashboard/profile",
+            icon: Swords,
+            isLocked: false,
+            isCompleted: false,
         },
         {
             title: "Settings",
