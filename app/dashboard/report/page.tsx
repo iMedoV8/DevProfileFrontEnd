@@ -1,10 +1,41 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { Button } from "@/components/ui/button"
 import { PieChart, Download, ArrowRight, ShieldCheck, ThumbsUp, ThumbsDown, Activity, Code, GitMerge, FileText, Zap } from "lucide-react"
 import Link from "next/link"
+
+// ── Animated counter hook ──
+function useCounter(target: number, duration: number, start: boolean) {
+    const [count, setCount] = useState(0)
+    const rafRef = useRef<number | null>(null)
+
+    useEffect(() => {
+        if (!start) return
+        const startTime = performance.now()
+        const animate = (now: number) => {
+            const elapsed = now - startTime
+            const progress = Math.min(elapsed / duration, 1)
+            const eased = 1 - Math.pow(1 - progress, 3)
+            setCount(Math.round(eased * target))
+            if (progress < 1) {
+                rafRef.current = requestAnimationFrame(animate)
+            }
+        }
+        rafRef.current = requestAnimationFrame(animate)
+        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+    }, [target, duration, start])
+
+    return count
+}
+
+function AnimatedNumber({ value }: { value: number }) {
+    const [mounted, setMounted] = useState(false)
+    useEffect(() => setMounted(true), [])
+    const count = useCounter(value, 1200, mounted)
+    return <>{count}</>
+}
 
 export default function ReportPage() {
     const { analysis, loadReport, currentSessionId } = useDevProfileStore()
@@ -94,7 +125,9 @@ export default function ReportPage() {
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-6 shadow-sm">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Overall Hireability</h3>
                     <div className="flex items-baseline gap-1">
-                        <span className={`text-6xl font-black tracking-tighter ${scoreColor(overallScore)}`}>{overallScore}</span>
+                        <span className={`text-6xl font-black tracking-tighter ${scoreColor(overallScore)}`}>
+                            {overallScore != null ? <AnimatedNumber value={overallScore} /> : "—"}
+                        </span>
                         <span className="text-lg font-bold text-muted-foreground">/100</span>
                     </div>
                     {percentileRanking && (
@@ -118,7 +151,9 @@ export default function ReportPage() {
                     ].map((item) => (
                         <div key={item.label} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm">
                             <item.icon className="size-5 text-muted-foreground mb-3" />
-                            <span className={`text-2xl font-bold ${scoreColor(item.score)}`}>{item.score ?? "—"}</span>
+                            <span className={`text-2xl font-bold tabular-nums ${scoreColor(item.score)}`}>
+                                {item.score != null ? <AnimatedNumber value={item.score} /> : "—"}
+                            </span>
                             <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 text-center">{item.label}</span>
                         </div>
                     ))}

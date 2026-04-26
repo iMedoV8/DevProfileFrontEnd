@@ -49,11 +49,7 @@ const coreAnalysisItems = [
   { title: "Hireability Score", description: "Real readiness score", icon: LineChart, href: "/sample-report" },
 ]
 
-const outputItems = [
-  { title: "Sample Report", description: "Preview your feedback", icon: FileText, href: "/sample-report" },
-  { title: "Improvement Roadmap", description: "Step-by-step plan", icon: Map, href: "/#roadmap" },
-  { title: "Interview Preparation", description: "What recruiters will ask", icon: MessageSquare, href: "/#interview" },
-]
+
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -231,31 +227,7 @@ export function Navbar() {
                           </div>
                         </div>
 
-                        <div className="my-2 h-px bg-border/60" />
 
-                        <div>
-                          <div className="mb-2 px-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                            Outputs
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            {outputItems.map((item) => (
-                              <Link
-                                key={item.title}
-                                href={item.href}
-                                className="group/item flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-accent focus:bg-accent"
-                                onClick={() => setFeaturesOpen(false)}
-                              >
-                                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground group-hover/item:bg-background group-hover/item:border group-hover/item:border-border transition-colors">
-                                  <item.icon className="size-4.5" />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-medium text-foreground">{item.title}</span>
-                                  <span className="text-xs text-muted-foreground transition-colors group-hover/item:text-foreground/80">{item.description}</span>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -449,17 +421,7 @@ export function Navbar() {
                             {item.title}
                           </Link>
                         ))}
-                        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-3 mb-1">Outputs</div>
-                        {outputItems.map((item) => (
-                          <Link
-                            key={item.title}
-                            href={item.href}
-                            className="rounded-lg py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            {item.title}
-                          </Link>
-                        ))}
+
                       </div>
                       {index !== navLinks.length - 1 && <div className="mt-4 h-px w-full bg-border/50" />}
                     </div>

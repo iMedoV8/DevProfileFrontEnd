@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useScrollVisible } from "@/hooks/use-scroll-visible"
 import { Brain, UserSearch, TrendingUp, ArrowRight } from "lucide-react"
+import Link from "next/link"
 import { useCallback, useRef, useState } from "react"
 
 const features = [
@@ -12,18 +13,21 @@ const features = [
     title: "AI Powered Analysis",
     description:
       "Analyzes resume + GitHub repositories to evaluate real skill level, not just keywords.",
+    href: "/#features",
   },
   {
     icon: UserSearch,
     title: "Recruiter Simulation",
     description:
       "Simulates a real technical recruiter review and identifies weaknesses before they do.",
+    href: "/how-it-works",
   },
   {
     icon: TrendingUp,
     title: "Hireability Score",
     description:
       "Generates a score and personalized improvement roadmap tailored to your target roles.",
+    href: "/sample-report",
   },
 ]
 
@@ -49,12 +53,13 @@ function FeatureCard({
   }, [])
 
   return (
-    <Card
-      ref={cardRef}
-      className={cn(
-        "group relative overflow-hidden border border-border bg-card transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-foreground/10",
-        visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
-      )}
+    <Link href={feature.href} className="block w-full h-full outline-none">
+      <Card
+        ref={cardRef}
+        className={cn(
+          "h-full group relative overflow-hidden border border-border bg-card transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-foreground/10 cursor-pointer",
+          visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+        )}
       style={{
         transitionDelay: visible ? `${index * 120}ms` : "0ms",
         transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -88,6 +93,7 @@ function FeatureCard({
         </div>
       </CardContent>
     </Card>
+    </Link>
   )
 }
 

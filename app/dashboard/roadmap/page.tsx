@@ -50,7 +50,7 @@ export default function RoadmapPage() {
 
     return (
         <div className="flex flex-col gap-8 pb-10">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 opacity-0 animate-fade-in-up">
                 <h1 className="text-3xl font-bold tracking-tight">Improvement Roadmap</h1>
                 <p className="text-muted-foreground max-w-2xl">
                     {roadmap.summary || `Based on your evaluation, we've generated this ${roadmap.totalWeeks}-week technical curriculum.`}
@@ -58,8 +58,12 @@ export default function RoadmapPage() {
             </div>
 
             <div className="relative border-l-2 border-border/60 ml-3 md:ml-6 flex flex-col gap-10">
-                {weeks.map((week) => (
-                    <div key={week.weekNumber} className="relative pl-8 md:pl-10">
+                {weeks.map((week, index) => (
+                    <div 
+                        key={week.weekNumber} 
+                        className="relative pl-8 md:pl-10 opacity-0 animate-fade-in-up"
+                        style={{ animationDelay: `${(index + 1) * 150}ms` }}
+                    >
                         {/* Timeline Node */}
                         <div className="absolute -left-[17px] top-1.5 flex size-8 items-center justify-center rounded-full border-4 border-background bg-primary text-xs font-bold text-primary-foreground shadow-sm">
                             W{week.weekNumber}
