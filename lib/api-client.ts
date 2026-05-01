@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8086"
 
 export interface ApiError {
     timestamp: string

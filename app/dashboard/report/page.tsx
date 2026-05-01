@@ -5,6 +5,7 @@ import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { Button } from "@/components/ui/button"
 import { PieChart, Download, ArrowRight, ShieldCheck, ThumbsUp, ThumbsDown, Activity, Code, GitMerge, FileText, Zap } from "lucide-react"
 import Link from "next/link"
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts"
 
 // ── Animated counter hook ──
 function useCounter(target: number, duration: number, start: boolean) {
@@ -138,25 +139,50 @@ export default function ReportPage() {
                 </div>
             </div>
 
-            {/* Score Breakdown */}
+            {/* Score Breakdown (Radar Chart & Stats) */}
             <div>
                 <h2 className="text-lg font-semibold tracking-tight mb-4">Score Breakdown</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    {[
-                        { label: "Code Quality", score: scoreBreakdown?.codeQuality, icon: Code },
-                        { label: "Complexity", score: scoreBreakdown?.complexity, icon: Zap },
-                        { label: "Activity", score: scoreBreakdown?.activity, icon: Activity },
-                        { label: "Resume", score: scoreBreakdown?.resume, icon: FileText },
-                        { label: "Tech Align", score: scoreBreakdown?.techAlign, icon: GitMerge },
-                    ].map((item) => (
-                        <div key={item.label} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm">
-                            <item.icon className="size-5 text-muted-foreground mb-3" />
-                            <span className={`text-2xl font-bold tabular-nums ${scoreColor(item.score)}`}>
-                                {item.score != null ? <AnimatedNumber value={item.score} /> : "—"}
-                            </span>
-                            <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 text-center">{item.label}</span>
-                        </div>
-                    ))}
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {/* Radar Chart */}
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-6 shadow-sm min-h-[350px]">
+                        {scoreBreakdown ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                    { subject: 'Code Quality', A: scoreBreakdown.codeQuality, fullMark: 100 },
+                                    { subject: 'Complexity', A: scoreBreakdown.complexity, fullMark: 100 },
+                                    { subject: 'Activity', A: scoreBreakdown.activity, fullMark: 100 },
+                                    { subject: 'Resume', A: scoreBreakdown.resume, fullMark: 100 },
+                                    { subject: 'Tech Align', A: scoreBreakdown.techAlign, fullMark: 100 },
+                                ]}>
+                                    <PolarGrid stroke="var(--border)" />
+                                    <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontWeight: 600 }} />
+                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                    <Radar name="Score" dataKey="A" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.3} />
+                                </RadarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">No data available</div>
+                        )}
+                    </div>
+                    
+                    {/* Grid of Scores */}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {[
+                            { label: "Code Quality", score: scoreBreakdown?.codeQuality, icon: Code },
+                            { label: "Complexity", score: scoreBreakdown?.complexity, icon: Zap },
+                            { label: "Activity", score: scoreBreakdown?.activity, icon: Activity },
+                            { label: "Resume", score: scoreBreakdown?.resume, icon: FileText },
+                            { label: "Tech Align", score: scoreBreakdown?.techAlign, icon: GitMerge },
+                        ].map((item) => (
+                            <div key={item.label} className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-secondary/20">
+                                <item.icon className="size-5 text-muted-foreground mb-3" />
+                                <span className={`text-2xl font-bold tabular-nums ${scoreColor(item.score)}`}>
+                                    {item.score != null ? <AnimatedNumber value={item.score} /> : "—"}
+                                </span>
+                                <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 text-center">{item.label}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 

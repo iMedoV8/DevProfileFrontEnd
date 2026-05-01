@@ -8,6 +8,7 @@ import {
     Trophy, ArrowUp, Star, Globe, Crown, BarChart3, Gem, FileText, Github,
     Code, Zap, Activity, GitMerge, Lock, User, Loader2, Sparkles,
 } from "lucide-react"
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts"
 
 // ── Icon mapping for achievements ──
 const ACHIEVEMENT_ICONS: Record<string, React.ElementType> = {
@@ -228,8 +229,27 @@ export default function ProfilePage() {
             {profile.stats && (
                 <div className="opacity-0 animate-fade-in-up animation-delay-200">
                     <h2 className="text-lg font-semibold tracking-tight mb-4">Skills Breakdown</h2>
-                    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                        <div className="flex flex-col gap-5">
+                    <div className="grid gap-6 lg:grid-cols-2 rounded-2xl border border-border bg-card p-6 shadow-sm">
+                        {/* Radar Chart */}
+                        <div className="flex flex-col items-center justify-center min-h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                    { subject: 'Code Quality', A: profile.stats.codeQuality, fullMark: 100 },
+                                    { subject: 'Complexity', A: profile.stats.complexity, fullMark: 100 },
+                                    { subject: 'Activity', A: profile.stats.activity, fullMark: 100 },
+                                    { subject: 'Resume', A: profile.stats.resume, fullMark: 100 },
+                                    { subject: 'Tech Align', A: profile.stats.techAlignment, fullMark: 100 },
+                                ]}>
+                                    <PolarGrid stroke="var(--border)" />
+                                    <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontWeight: 600 }} />
+                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                    <Radar name="Score" dataKey="A" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.3} />
+                                </RadarChart>
+                            </ResponsiveContainer>
+                        </div>
+                        
+                        {/* Progress Bars */}
+                        <div className="flex flex-col justify-center gap-5">
                             {STAT_CONFIG.map((stat, index) => {
                                 const value = profile.stats![stat.key]
                                 const Icon = stat.icon

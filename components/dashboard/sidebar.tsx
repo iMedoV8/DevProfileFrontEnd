@@ -15,6 +15,7 @@ import {
     Lock,
     CheckCircle2,
     Swords,
+    BrainCircuit,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -84,6 +85,15 @@ export function Sidebar() {
             isLocked: !isReportUnlocked,
             isCompleted: isReportCompleted,
         },
+        /*
+        {
+            title: "Interview Prep",
+            href: "/dashboard/interview-prep",
+            icon: BrainCircuit,
+            isLocked: !isReportUnlocked,
+            isCompleted: isReportCompleted,
+        },
+        */
         {
             title: "Dev Profile",
             href: "/dashboard/profile",

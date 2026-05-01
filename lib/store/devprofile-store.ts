@@ -89,6 +89,7 @@ interface DevProfileState {
     startAnalysis: () => Promise<void>
     loadReport: () => Promise<void>
     loadRoadmap: () => Promise<void>
+    loadInterviewPrep: () => Promise<void>
 
     // Workflow
     setWorkflowStep: (step: WorkflowStep) => void
@@ -131,6 +132,7 @@ const initialState = {
         strengths: [],
         weaknesses: [],
         generatedAt: null,
+        interviewQuestions: null,
     },
     roadmap: null as RoadmapResponse | null,
     workflowStep: "START" as WorkflowStep,
@@ -451,6 +453,46 @@ export const useDevProfileStore = create<DevProfileState>()(
                 if (!currentSessionId) return
                 const roadmap = await fetchRoadmap(currentSessionId)
                 set({ roadmap })
+            },
+
+            loadInterviewPrep: async () => {
+                const { analysis } = get()
+                
+                // MOCK DATA since backend does not yet support interview generation
+                // In the future, this would be an API call like `await fetchInterviewPrep(currentSessionId)`
+                const mockQuestions = [
+                    {
+                        id: "1",
+                        category: "System Design",
+                        question: "How would you design a scalable microservices architecture using Spring Boot?",
+                        answer: "I would start by breaking down the domain into bounded contexts. Each microservice would have its own database to ensure loose coupling. I would use an API Gateway for external routing, Eureka or Consul for service discovery, and a message broker like Kafka or RabbitMQ for asynchronous communication between services. Security would be handled via OAuth2/JWT at the gateway level."
+                    },
+                    {
+                        id: "2",
+                        category: "Java / Core",
+                        question: "Explain the difference between HashMap and ConcurrentHashMap in Java.",
+                        answer: "HashMap is not thread-safe and can throw a ConcurrentModificationException if modified concurrently. ConcurrentHashMap is thread-safe. In earlier versions it used lock striping (segmenting the map), but in Java 8+ it uses CAS (Compare-And-Swap) operations and synchronizes only at the bucket level, making it highly performant for concurrent reads and writes."
+                    },
+                    {
+                        id: "3",
+                        category: "Data Structures",
+                        question: "If you noticed a bottleneck in database read performance, what steps would you take to optimize it?",
+                        answer: "First, I'd analyze the slow queries using an EXPLAIN plan to see if indexes are missing or if full table scans are occurring. I would add composite indexes if appropriate. Next, I'd check if we can implement caching (like Redis or Memcached) for frequently read, rarely updated data. If the dataset is simply too large, I might look into read replicas or database sharding."
+                    },
+                    {
+                        id: "4",
+                        category: "Behavioral",
+                        question: "Tell me about a time you had to learn a new technology quickly to solve a problem.",
+                        answer: "Use the STAR method: Situation (describe the project context), Task (what problem needed solving), Action (how you researched, read documentation, and built a POC with the new tech), Result (the successful integration and what you learned about adapting quickly)."
+                    }
+                ]
+                
+                set((state) => ({
+                    analysis: {
+                        ...state.analysis,
+                        interviewQuestions: mockQuestions
+                    }
+                }))
             },
 
             setWorkflowStep: (step) => set({ workflowStep: step }),

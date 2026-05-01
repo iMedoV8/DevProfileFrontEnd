@@ -168,6 +168,13 @@ export interface ReportResponse {
     generatedAt: string
 }
 
+export interface InterviewQuestion {
+    id: string
+    category: string
+    question: string
+    answer: string
+}
+
 export interface AnalysisResult {
     hasRun: boolean
     status: AnalysisStatus
@@ -180,6 +187,7 @@ export interface AnalysisResult {
     strengths: string[]
     weaknesses: string[]
     generatedAt: string | null
+    interviewQuestions?: InterviewQuestion[] | null
 }
 
 // ── Roadmap (backend RoadmapResponse) ──
