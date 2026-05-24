@@ -55,14 +55,77 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Handle Next.js hydration mismatch for Zustand persist
     const [isMounted, setIsMounted] = useState(false)
+    const [storeRehydrated, setStoreRehydrated] = useState(false)
+    const [authChecked, setAuthChecked] = useState(false)
 
     useEffect(() => {
         setIsMounted(true)
     }, [])
 
+    // Ask the backend "who am I?" using the httpOnly auth cookie. This is the
+    // only way the frontend can know if there's a live session — the JWT lives
+    // in a cookie we can't read from JS. Runs once on mount.
     useEffect(() => {
-        // Only run auth and workflow checks after the client has safely mounted the persisted store
         if (!isMounted) return
+        let cancelled = false
+        useDevProfileStore.getState().bootstrapAuth()
+            .finally(() => {
+                if (!cancelled) setAuthChecked(true)
+            })
+        return () => { cancelled = true }
+    }, [isMounted])
+
+    // Cross-tab logout: when another tab logs out (writes "logout-event"),
+    // bounce this tab to the landing page too.
+    useEffect(() => {
+        if (typeof window === "undefined") return
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === "logout-event") {
+                window.location.href = "/?auth=required"
+            }
+        }
+        window.addEventListener("storage", onStorage)
+        return () => window.removeEventListener("storage", onStorage)
+    }, [])
+
+    // Re-sync the persisted Zustand store with the server every time the active
+    // session changes (and on first mount). Without this, the local state can
+    // drift out of sync with the backend — e.g. a resume uploaded in another
+    // tab, a session updated after a redeploy, or stale flags from an earlier
+    // workflow step.
+    //
+    // Important: we read `selectSession` off the store imperatively via getState()
+    // rather than destructuring it from the hook above. Zustand returns a new
+    // function reference on every store update; if that reference were in the
+    // deps array, this effect would re-fire on every rehydration and trigger an
+    // infinite loop that cancels animations and floods the API.
+    useEffect(() => {
+        if (!isMounted) return
+        if (!authChecked) return
+        if (!user.isAuthenticated) return
+        if (!currentSessionId) {
+            setStoreRehydrated(true)
+            return
+        }
+        let cancelled = false
+        setStoreRehydrated(false)
+        useDevProfileStore.getState().selectSession(currentSessionId)
+            .catch(() => {
+                // Backend unreachable / session no longer exists — fall through to
+                // the workflow guard which will redirect to /dashboard.
+            })
+            .finally(() => {
+                if (!cancelled) setStoreRehydrated(true)
+            })
+        return () => { cancelled = true }
+    }, [isMounted, authChecked, user.isAuthenticated, currentSessionId])
+
+    useEffect(() => {
+        // Only run auth and workflow checks after the auth probe AND the store
+        // rehydration have both finished.
+        if (!isMounted) return
+        if (!authChecked) return
+        if (!storeRehydrated) return
 
         // Force viewport reset on route change
         window.scrollTo({ top: 0, behavior: "auto" });
@@ -92,11 +155,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }
             }
         }
-    }, [user.isAuthenticated, workflowStep, pathname, router, isMounted, currentSessionId])
+    }, [user.isAuthenticated, workflowStep, pathname, router, isMounted, authChecked, storeRehydrated, currentSessionId])
 
     // Mount the DashboardThemeProvider wrapper synchronously to inject the pre-hydration FOUC script.
     // We conditionally fade the inner structure using opacity-0 to avert layout shifts and auth-flashing.
-    const isReady = isMounted && user.isAuthenticated
+    const isReady = isMounted && authChecked && user.isAuthenticated
 
     return (
         <DashboardThemeProvider>

@@ -95,9 +95,9 @@ export function Navbar() {
     setDropdownOpen(false)
   }, [pathname])
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     setLogoutDialogOpen(false)
-    logout()
+    await logout()  // Clears the auth cookie server-side AND resets the store.
     localStorage.clear()
 
     toast({

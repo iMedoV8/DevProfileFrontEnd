@@ -25,6 +25,18 @@ export async function registerService(data: RegisterRequest): Promise<string> {
     return api.post<string>("/api/auth/register", data)
 }
 
+export async function logoutService(): Promise<void> {
+    return api.post<void>("/api/auth/logout")
+}
+
+/**
+ * Returns the currently authenticated user. The cookie is sent automatically.
+ * Throws ApiError(401) if no valid session — used by the layout to bootstrap.
+ */
+export async function fetchMe(): Promise<LoginResponse> {
+    return api.get<LoginResponse>("/api/user/me")
+}
+
 // ── Dashboard ──
 
 export async function fetchDashboard(): Promise<DashboardResponse> {
@@ -144,6 +156,10 @@ export async function fetchResumeProfile(sessionId: number): Promise<ResumeData>
 
 export async function triggerAnalysis(sessionId: number): Promise<AnalysisStatusResponse> {
     return api.post<AnalysisStatusResponse>(`/api/sessions/${sessionId}/analyze`)
+}
+
+export async function retryAnalysis(sessionId: number): Promise<AnalysisStatusResponse> {
+    return api.post<AnalysisStatusResponse>(`/api/sessions/${sessionId}/retry`)
 }
 
 export async function pollAnalysisStatus(sessionId: number): Promise<AnalysisStatusResponse> {

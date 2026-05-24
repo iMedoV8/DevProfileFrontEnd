@@ -20,13 +20,20 @@ export interface LoginRequest {
     password: string
 }
 
+/**
+ * Returned from POST /api/auth/login and GET /api/user/me.
+ *
+ * The JWT itself is in an httpOnly cookie — JavaScript can't see it. The
+ * `csrfToken` field is the matching value the frontend must echo back in
+ * the `X-CSRF-Token` header on every mutating request.
+ */
 export interface LoginResponse {
-    token: string
     username: string
     email: string
     role: string
     techField: string | null
     careerGoal: string | null
+    csrfToken: string
 }
 
 export interface RegisterRequest {

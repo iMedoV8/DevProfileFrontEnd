@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Activity, Play, CheckCircle2, ArrowRight, Cpu, AlertTriangle, Loader2 } from "lucide-react"
+import { Activity, Play, CheckCircle2, ArrowRight, Cpu, AlertTriangle, Loader2, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
 const MESSAGES = [
@@ -81,7 +81,23 @@ export default function AnalysisPage() {
 
     // --- FAILED STATE ---
     if (analysis.status === "failed") {
-        const handleRetryWithNewSession = async () => {
+        const handleRetry = async () => {
+            if (!currentSessionId) {
+                toast({ variant: "destructive", title: "Error", description: "No active session." })
+                return
+            }
+            try {
+                await startAnalysis({ retry: true })
+            } catch (err: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Retry Failed",
+                    description: err?.message || "Could not retry the analysis.",
+                })
+            }
+        }
+
+        const handleStartNewSession = async () => {
             try {
                 await createNewSession("Retry - " + new Date().toLocaleDateString())
                 toast({
@@ -113,15 +129,29 @@ export default function AnalysisPage() {
                     </div>
                     <h3 className="mb-2 text-lg font-semibold tracking-tight text-destructive">Evaluation Error</h3>
                     <p className="mb-8 max-w-md text-sm text-muted-foreground">
-                        {analysis.progressMessage || "The AI analysis encountered an error. Please start a new session to try again."}
+                        {analysis.progressMessage || "The AI analysis encountered an error. Try running it again — most failures are transient."}
                     </p>
-                    <Button
-                        onClick={handleRetryWithNewSession}
-                        className="flex items-center gap-2 rounded-xl h-11 px-8 shadow-sm"
-                    >
-                        <Play className="size-4 fill-current" />
-                        Start New Session
-                    </Button>
+                    <div className="flex flex-col items-center gap-3 sm:flex-row">
+                        <Button
+                            onClick={handleRetry}
+                            size="lg"
+                            className="flex h-12 items-center gap-2 rounded-full px-8 shadow-md transition-all hover:scale-105 active:scale-95"
+                        >
+                            <RefreshCw className="size-4" />
+                            <span className="font-semibold">Retry Analysis</span>
+                        </Button>
+                        <Button
+                            onClick={handleStartNewSession}
+                            variant="outline"
+                            className="flex items-center gap-2 rounded-xl h-11 px-6 shadow-sm"
+                        >
+                            <Play className="size-4 fill-current" />
+                            Start New Session
+                        </Button>
+                    </div>
+                    <p className="mt-4 text-xs text-muted-foreground/70 max-w-sm">
+                        Retry re-runs the AI on this session (counts against your daily quota). Start a new session if your GitHub or résumé data has changed.
+                    </p>
                 </div>
             </div>
         )

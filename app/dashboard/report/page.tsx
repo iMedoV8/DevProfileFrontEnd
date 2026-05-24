@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useDevProfileStore } from "@/lib/store/devprofile-store"
 import { Button } from "@/components/ui/button"
 import { PieChart, Download, ArrowRight, ShieldCheck, ThumbsUp, ThumbsDown, Activity, Code, GitMerge, FileText, Zap } from "lucide-react"
@@ -8,34 +8,38 @@ import Link from "next/link"
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts"
 
 // ── Animated counter hook ──
-function useCounter(target: number, duration: number, start: boolean) {
+// Animates from 0 up to `target` whenever target changes. Self-contained — no
+// external "mounted" gate needed (useEffect only runs on the client anyway).
+function useAnimatedNumber(target: number, duration: number = 1200): number {
     const [count, setCount] = useState(0)
-    const rafRef = useRef<number | null>(null)
 
     useEffect(() => {
-        if (!start) return
+        if (!Number.isFinite(target) || target === 0) {
+            setCount(target || 0)
+            return
+        }
+        // setTimeout-driven over rAF so the animation also runs in test/preview
+        // environments where the tab is treated as backgrounded (rAF is throttled
+        // or paused entirely). 60fps target.
+        let timer = 0
         const startTime = performance.now()
-        const animate = (now: number) => {
-            const elapsed = now - startTime
+        const tick = () => {
+            const elapsed = performance.now() - startTime
             const progress = Math.min(elapsed / duration, 1)
             const eased = 1 - Math.pow(1 - progress, 3)
-            setCount(Math.round(eased * target))
-            if (progress < 1) {
-                rafRef.current = requestAnimationFrame(animate)
-            }
+            setCount(Math.round(target * eased))
+            if (progress < 1) timer = window.setTimeout(tick, 16)
+            else setCount(target)
         }
-        rafRef.current = requestAnimationFrame(animate)
-        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
-    }, [target, duration, start])
+        timer = window.setTimeout(tick, 16)
+        return () => clearTimeout(timer)
+    }, [target, duration])
 
     return count
 }
 
 function AnimatedNumber({ value }: { value: number }) {
-    const [mounted, setMounted] = useState(false)
-    useEffect(() => setMounted(true), [])
-    const count = useCounter(value, 1200, mounted)
-    return <>{count}</>
+    return <>{useAnimatedNumber(value, 1200)}</>
 }
 
 export default function ReportPage() {

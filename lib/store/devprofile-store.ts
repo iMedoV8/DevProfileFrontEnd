@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { api } from "../api-client"
 import {
     AnalysisResult,
     GithubData,
@@ -13,7 +14,10 @@ import {
     connectGithubService,
     uploadResumeService,
     triggerAnalysis,
+    retryAnalysis,
     pollAnalysisStatus,
+    logoutService,
+    fetchMe,
     fetchReport,
     fetchRoadmap,
     markReportViewed,
@@ -73,7 +77,12 @@ interface DevProfileState {
     // Auth Actions
     login: (username: string, password: string) => Promise<void>
     register: (username: string, email: string, password: string, techField: string, careerGoal: string) => Promise<void>
-    logout: () => void
+    logout: () => Promise<void>
+    /**
+     * Asks the backend "who am I?" using the httpOnly auth cookie. Sets the user
+     * slice on success; clears it on 401. Called by the dashboard layout on mount.
+     */
+    bootstrapAuth: () => Promise<void>
     resetAccount: () => void
     updateProfile: (techField: string, careerGoal: string) => Promise<void>
 
@@ -86,7 +95,7 @@ interface DevProfileState {
     // Pipeline Actions
     connectGithub: (username: string) => Promise<void>
     uploadResume: (file: File) => Promise<void>
-    startAnalysis: () => Promise<void>
+    startAnalysis: (opts?: { retry?: boolean }) => Promise<void>
     loadReport: () => Promise<void>
     loadRoadmap: () => Promise<void>
     loadInterviewPrep: () => Promise<void>
@@ -148,8 +157,11 @@ export const useDevProfileStore = create<DevProfileState>()(
             // ── Auth ──
 
             login: async (username, password) => {
+                // The backend sets the httpOnly auth cookie via Set-Cookie; we
+                // never see the JWT in JS. The response body gives us the CSRF
+                // token to send on subsequent mutating requests.
                 const response = await loginService(username, password)
-                localStorage.setItem("token", response.token)
+                api.setCsrfToken(response.csrfToken)
                 set({
                     user: {
                         name: response.username,
@@ -165,9 +177,41 @@ export const useDevProfileStore = create<DevProfileState>()(
                 await registerService({ username, email, password, techField, careerGoal })
             },
 
-            logout: () => {
-                localStorage.removeItem("token")
+            logout: async () => {
+                try {
+                    await logoutService()  // Clears the cookie server-side.
+                } catch {
+                    // Best-effort — even if the server call fails, clear local state.
+                }
+                api.setCsrfToken(null)
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("logout-event", String(Date.now()))  // Cross-tab broadcast.
+                }
                 set({ ...initialState })
+            },
+
+            bootstrapAuth: async () => {
+                try {
+                    const me = await fetchMe()
+                    api.setCsrfToken(me.csrfToken)
+                    set({
+                        user: {
+                            name: me.username,
+                            email: me.email || "",
+                            isAuthenticated: true,
+                            techField: me.techField,
+                            careerGoal: me.careerGoal,
+                        },
+                    })
+                } catch {
+                    // 401 or network error → no session. Reset the user slice and
+                    // CSRF token without wiping the entire store (would lose UI prefs).
+                    api.setCsrfToken(null)
+                    set((state) => ({
+                        ...state,
+                        user: { ...initialState.user },
+                    }))
+                }
             },
 
             resetAccount: () =>
@@ -334,12 +378,17 @@ export const useDevProfileStore = create<DevProfileState>()(
                 }))
             },
 
-            startAnalysis: async () => {
+            startAnalysis: async (opts?: { retry?: boolean }) => {
                 const { currentSessionId } = get()
                 if (!currentSessionId) throw new Error("No active session")
 
-                // Trigger the async analysis on backend
-                const status = await triggerAnalysis(currentSessionId)
+                // Use the dedicated /retry endpoint when re-running a FAILED session.
+                // It resets the workflow step on the same session and charges a quota
+                // slot, rather than forcing the user to create a new session and
+                // redo GitHub + resume upload.
+                const status = opts?.retry
+                    ? await retryAnalysis(currentSessionId)
+                    : await triggerAnalysis(currentSessionId)
 
                 set({
                     analysis: {
